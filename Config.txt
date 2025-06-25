@@ -1,0 +1,3 @@
+scheduler fcfs
+num-cpu 4
+quantum-cycles 10
