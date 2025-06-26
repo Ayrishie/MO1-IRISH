@@ -13,6 +13,7 @@
 
 class FCFSScheduler: public Scheduler {
 private:
+    int delayPerExecution;
     const int cores;
     std::atomic<bool> scheduler_running;
 
@@ -26,7 +27,7 @@ private:
     void cpuWorker(int coreId);
 
 public:
-    explicit FCFSScheduler(int cores);
+    explicit FCFSScheduler(int cores, int delayPerExecution);
     ~FCFSScheduler();
 
     void start();

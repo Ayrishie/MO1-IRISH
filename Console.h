@@ -2,70 +2,63 @@
 #define CONSOLE_H
 
 #include <iostream>
-#include <algorithm>
 #include <iomanip>
-#include <stdlib.h>
+#include <string>
+#include <vector>
 #include <memory>
-#include <chrono>
-#include <ctime>
 #include <thread>
+#include <atomic>
+#include <chrono>
+#include <sstream>
+#include <fstream>
+#include <algorithm>
+
 #include "Process.h"
 #include "RRScheduler.h"
 #include "FCFSScheduler.h"
-#include "Config.h"
-
-//new
 #include "Scheduler.h"
-using namespace std;
 
 class Console {
 private:
-
-    string userInput;
-    unique_ptr<RRScheduler> rrScheduler;
-  
-    int cpuCount;
-    int timeQuantum;
-    atomic<bool> schedulerRunning;  
-    atomic<bool> testModeRunning;
-    void displayContinuousUpdates();
-    unique_ptr<FCFSScheduler> fcfsScheduler;
-    
+    std::string userInput;
     std::vector<std::shared_ptr<Process>> processes;
 
-    // this is the change
-    Scheduler& scheduler;
+    std::unique_ptr<RRScheduler> rrScheduler;
+    std::unique_ptr<FCFSScheduler> fcfsScheduler;
 
-    int batchProcessFreq;
-    int minInstructions;
-    int maxInstructions;
-    int delayPerExecution;
+    std::atomic<bool> schedulerRunning = false;
+    std::atomic<bool> testModeRunning = false;
+
+    int pidCounter = 0; 
+    int cpuCount = 0;
+    int timeQuantum = 0;
+    int batchProcessFreq = 0;
+    int minInstructions = 0;
+    int maxInstructions = 0;
+    int delayPerExecution = 0;
     std::string schedulerType;
-       
-    
+
+    // Private functions
+    void displayContinuousUpdates();
+    void showProcessScreen(const std::string& procName);
+    void printUtilization(std::ostream* out = nullptr) const;
+    void listProcesses();
 
 public:
-    Console(Scheduler& sched, int cpuCount, int timeQuantum, int batchFreq, int minIns, int maxIns, int delay, std::string schedulerType); // default constructor (non-parameterized)
+    Console(); // Default constructor
 
+    // Core commands
     void header();
     void menu();
     void start();
     void initialize();
-    void screen();
-    void schedulerTest();
-    void schedulerStop();
-    void reportUtil();
     void clear();
-    void parseInput(string userInput);
-    void listProcesses();
+    void screen();
     void schedulerStart();
-
-
-    // if out == nullptr
-    void printUtilization(std::ostream* out = nullptr) const;
-    void showProcessScreen(const std::string& procName);
+    void schedulerStop();
+    void schedulerTest();
+    void reportUtil();
+    void parseInput(std::string userInput);
 };
-
-
 
 #endif

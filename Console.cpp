@@ -5,21 +5,9 @@
 #include <iostream>
 using namespace std;
 
-Console::Console(Scheduler& sched, int cpuCount, int timeQuantum, int batchFreq, int minIns, int maxIns, int delay, std::string schedulerType)
-    : scheduler(sched), cpuCount(cpuCount), timeQuantum(timeQuantum),
-    batchProcessFreq(batchFreq), minInstructions(minIns), maxInstructions(maxIns),
-    delayPerExecution(delay), schedulerType(schedulerType), schedulerRunning(false)
-{
-    if (dynamic_cast<RRScheduler*>(&sched)) {
-        rrScheduler = std::make_unique<RRScheduler>(cpuCount, timeQuantum);
-    }
-    else {
-        fcfsScheduler = std::make_unique<FCFSScheduler>(cpuCount);
-        this->timeQuantum = 0;
-    }
+Console::Console() {
+  
 }
-
-
 
 std::string getCurrentTime() {
     auto now = std::chrono::system_clock::now();
@@ -72,80 +60,144 @@ void Console::start() {
 
 void Console::initialize() {
     clear();
-    // Banner with green color
-    std::cout << "\033[32m"; // Set green
+    std::ifstream config("config.txt");
+    if (!config.is_open()) {
+        std::cerr << "Error: Could not open config.txt\n";
+        return;
+    }
+
+    // Set default values (matches old main.cpp)
+    cpuCount = 1;
+    timeQuantum = 0;
+    batchProcessFreq = 1;
+    minInstructions = 1000;
+    maxInstructions = 2000;
+    delayPerExecution = 0;
+    schedulerType = "fcfs";
+
+    std::string key, value;
+    while (config >> key >> value) {
+        // Remove quotes if any
+        value.erase(std::remove(value.begin(), value.end(), '\"'), value.end());
+
+        if (key == "scheduler") schedulerType = value;
+        else if (key == "num-cpu") cpuCount = std::stoi(value);
+        else if (key == "quantum-cycles") timeQuantum = std::stoi(value);
+        else if (key == "batch-process-freq") batchProcessFreq = std::stoi(value);
+        else if (key == "min-ins") minInstructions = std::stoi(value);
+        else if (key == "max-ins") maxInstructions = std::stoi(value);
+        else if (key == "delay-per-exec") delayPerExecution = std::stoi(value);
+        else std::cout << "Warning: unknown key \"" << key << "\" skipped\n";
+    }
+
+    // Show config summary
+    std::cout << "\033[32m";
     std::cout << "===============================\n";
     std::cout << "|    SYSTEM INITIALIZATION    |\n";
-    std::cout << "===============================";
-    std::cout << "\033[0m";  // Reset color
+    std::cout << "===============================\n";
+    std::cout << "\033[0m";
 
-    // Do the real work (untouched)
+    std::cout << "\033[36m";
+    std::cout << "Scheduler: " << schedulerType << "\n";
+    std::cout << "CPU Count: " << cpuCount << "\n";
+
+    if (schedulerType == "rr") {
+        std::cout << "Quantum: " << timeQuantum << "\n";
+    }
+    else {
+        std::cout << "Quantum: N/A (FCFS)\n";
+    }
+
+    std::cout << "Batch Frequency: " << batchProcessFreq << " ticks\n";
+    std::cout << "Instructions: " << minInstructions << " to " << maxInstructions << "\n";
+    std::cout << "Delay per Exec: " << delayPerExecution << "ms\n";
+    std::cout << "\033[0m";
+
     processes.clear();
     schedulerRunning = false;
 
-    for (int i = 1; i <= 10; ++i) {
-        string processName = "P" + to_string(i);
-        int commands = 5 + (rand() % 100);
-        size_t memory = 512 + (i * 64);
-        auto process = make_shared<Process>(processName, commands, memory);
-        processes.push_back(process);
-
-
-        if (schedulerType == "rr") {
-            rrScheduler->enqueueProcess(process);
-        }
-        else {
-            fcfsScheduler->addProcess(process);
-        }
+    // Scheduler init
+    if (schedulerType == "rr") {
+        rrScheduler = std::make_unique<RRScheduler>(cpuCount, timeQuantum);
     }
-
-    // Confirmation summary in cyan
-    std::cout << "\033[36m"; // Set cyan
-    std::cout << "\nCreated " << processes.size() << " processes\n\n";
-    std::cout << "\033[0m"; // Reset color
+    else if (schedulerType == "fcfs") {
+        fcfsScheduler = std::make_unique<FCFSScheduler>(cpuCount, delayPerExecution);
+    }
+    else {
+        std::cerr << "Error: unknown scheduler type '" << schedulerType << "' in config.txt\n";
+    }
 }
+
 
 
 
 void Console::schedulerStart() {
     clear();
 
-    if (processes.empty()) {
-        std::cout << "\033[36m"; // Cyan
-        std::cout << "No processes to schedule. Use 'initialize' first.\n";
-        std::cout << "\033[0m";
+    if (!fcfsScheduler && !rrScheduler) {
+        std::cerr << "Error: Scheduler not initialized. Please run initialize first.\n";
         return;
     }
 
-    if (schedulerType == "rr") {
-        // Header
-        std::cout << "\033[32m"; // Green
-        std::cout << "=====================================\n";
-        std::cout << "|      SCHEDULER START (RR)         |\n";
-        std::cout << "=====================================\n";
-        std::cout << "\033[0m";
+    if (schedulerRunning) {
+        std::cout << "Scheduler is already running!\n";
+        return;
+    }
 
-        std::cout << "\033[36m"; // Cyan
+    schedulerRunning = true;
+
+    // Header depending on scheduler type
+    std::cout << "\033[32m";
+    std::cout << "=====================================\n";
+    std::cout << "|      SCHEDULER START (" << (schedulerType == "rr" ? "RR" : "FCFS") << ")       |\n";
+    std::cout << "=====================================\n";
+    std::cout << "\033[0m";
+
+    std::cout << "\033[36m";
+    if (schedulerType == "rr") {
         std::cout << "Starting Round Robin scheduler with " << cpuCount << " CPUs and time quantum " << timeQuantum << "\n";
         rrScheduler->start();
-        schedulerRunning = true;
-        std::cout << "Scheduler started successfully.\n\n";
-        std::cout << "\033[0m";
-    } else {
-        // Header
-        std::cout << "\033[32m"; // Green
-        std::cout << "=====================================\n";
-        std::cout << "|    SCHEDULER START (FCFS)         |\n";
-        std::cout << "=====================================\n";
-        std::cout << "\033[0m";
 
-        std::cout << "\033[36m"; // Cyan
+    }
+    else {
         std::cout << "Starting FCFS scheduler with " << cpuCount << " CPUs\n";
         fcfsScheduler->start();
-        schedulerRunning = true;
-        std::cout << "FCFS scheduler started successfully.\n\n";
-        std::cout << "\033[0m";
     }
+    std::cout << "Process will be generated every " << batchProcessFreq << " ticks\n";
+    std::cout << "\033[0m";
+
+    std::thread schedulerThread([this]() {
+        int tick = 0;
+
+        while (schedulerRunning) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
+            tick++;
+
+            if (tick % batchProcessFreq == 0) {
+                std::string name = "P" + std::to_string(++pidCounter);
+                int commands = minInstructions + (rand() % (maxInstructions - minInstructions + 1));
+                size_t memory = 512 + (pidCounter * 64);
+                auto process = std::make_shared<Process>(name, commands, memory);
+                processes.push_back(process);
+
+                if (schedulerType == "rr") {
+                    rrScheduler->enqueueProcess(process);
+                }
+                else {
+                    fcfsScheduler->addProcess(process);
+                }
+
+                //std::cout << "\033[36m[Tick " << tick << "] Created process: " << name
+                //    << " with " << commands << " instructions\n\033[0m";
+            }
+
+            // Optional: Add per-tick scheduler logic here if needed
+        }
+        });
+
+    schedulerThread.detach();
+
+    std::cout << "\033[36mScheduler started successfully.\n\n\033[0m";
 }
 
 
@@ -305,6 +357,7 @@ void Console::listProcesses() {
     system("cls");// remove past DELETE
 
     if (processes.empty()) {
+        clear();
         std::cout << "\033[93m"; // Light yellow
         std::cout << "No processes available.\n";
         std::cout << "\033[0m";
@@ -415,23 +468,18 @@ void Console::schedulerTest() {
     std::cout << (schedulerType == "rr" ? "Scheduler test stopped.\n" : "FCFS scheduler test stopped.\n");
 }
 
-
 void Console::schedulerStop() {
     if (schedulerRunning) {
-        if (schedulerType == "rr") {
-            std::cout << "Stopping Round Robin scheduler...\n";
-            rrScheduler->stop();
-            std::cout << "Scheduler stopped successfully.\n";
-        }
-        else {
-            std::cout << "Stopping FCFS scheduler...\n";
-            fcfsScheduler->stop();
-            std::cout << "FCFS scheduler stopped successfully.\n";
-        }
-        schedulerRunning = false;
+        schedulerRunning = false; // Stop adding new processes only
+
+        std::cout << "\033[31m";
+        std::cout << "==============================\n";
+        std::cout << "|    PROCESS FEED STOPPED    |\n";
+        std::cout << "==============================\n";
+        std::cout << "\033[0m";
     }
     else {
-        std::cout << "Scheduler is not currently running.\n";
+        std::cout << "Scheduler is not currently accepting new processes.\n";
     }
 }
 
@@ -478,7 +526,7 @@ void Console::reportUtil() {
     file << "=====================================================================\n";
     file.close();
 
-    cout << "Report generated at ./Debug/csopesy-log.txt! << endl" << endl;
+    std::cout << "Report generated at ./Debug/csopesy-log.txt!\n\n";
 }
 
 

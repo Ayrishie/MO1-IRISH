@@ -3,9 +3,8 @@
 #include <chrono>
 
 
-FCFSScheduler::FCFSScheduler(int cores)
-    : cores(cores),
-    scheduler_running(false) {
+FCFSScheduler::FCFSScheduler(int cores, int delayPerExecution)
+    : cores(cores), delayPerExecution(delayPerExecution), scheduler_running(false) {
 }
 
 FCFSScheduler::~FCFSScheduler() {
@@ -60,7 +59,8 @@ void FCFSScheduler::cpuWorker(int coreId) {
             process->core_id = coreId;
             while (!process->isFinished()) {
                 process->executeCommand(coreId);
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                //std::this_thread::sleep_for(std::chrono::milliseconds(1)); // For testing lower instruction
+                std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
             }
             process->core_id = -1;
         }

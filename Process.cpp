@@ -30,7 +30,7 @@ Process::Process(const std::string& pname, int commands, size_t memory)
     InstructionGenerator generator;
     instructions = generator.generateInstructionSet(pname, commands);
 
-    log_file = make_unique<ofstream>(name + ".txt");
+    log_file = make_unique<ofstream>("processesLogs/" + name + ".txt");
     if (log_file->is_open()) {
         *log_file << "Process: " << name << endl;
         *log_file << "Logs:" << endl;
@@ -60,7 +60,7 @@ Process::Process(const std::string& pname, const std::vector<std::shared_ptr<Ins
     // Initialize context
     context = make_unique<ProcessContext>(pname);
 
-    log_file = make_unique<ofstream>(name + ".txt");
+    log_file = make_unique<ofstream>("processesLogs/" + name + ".txt");
     if (log_file->is_open()) {
         *log_file << "Process: " << name << endl;
         *log_file << "Logs:" << endl;
