@@ -5,22 +5,19 @@
 #include <iostream>
 using namespace std;
 
-
-#ifdef RR_SCHEDULER
-Console::Console(Scheduler & sched, int cpuCount, int timeQuantum)
-    : scheduler(sched), cpuCount(cpuCount), timeQuantum(timeQuantum) {
-    // actually build the RR scheduler object:
-        +rrScheduler = std::make_unique<RRScheduler>(cpuCount, timeQuantum);
-}
-#else
-Console::Console(Scheduler& sched, int cpuCount, int /*unused*/)
-    : scheduler(sched), cpuCount(cpuCount), timeQuantum(0) {
-       // actually build the FCFS scheduler object:
+Console::Console(Scheduler& sched, int cpuCount, int timeQuantum, int batchFreq, int minIns, int maxIns, int delay, std::string schedulerType)
+    : scheduler(sched), cpuCount(cpuCount), timeQuantum(timeQuantum),
+    batchProcessFreq(batchFreq), minInstructions(minIns), maxInstructions(maxIns),
+    delayPerExecution(delay), schedulerType(schedulerType), schedulerRunning(false)
+{
+    if (dynamic_cast<RRScheduler*>(&sched)) {
+        rrScheduler = std::make_unique<RRScheduler>(cpuCount, timeQuantum);
+    }
+    else {
         fcfsScheduler = std::make_unique<FCFSScheduler>(cpuCount);
+        this->timeQuantum = 0;
+    }
 }
-#endif
-
-
 
 
 
@@ -43,11 +40,27 @@ void Console::header() {
     cout << blk + "   " + blk + "      " + blk + "  " + blk + "    " + blk + "  " + blk + blk + blk + "   " + blk + "          " + blk + "    " + blk << endl;
     cout << " " + blk + blk + blk + "  " + blk + blk + blk + "   " + blk + blk + blk + "   " + blk + "       " + blk + blk + blk + "  " + blk + blk + blk + "    " + blk << endl;
 
-    cout << "Hello, Welcome to CSOPESY commandline!\n";
-    cout << "Type 'exit' to quit, 'clear' to clear the screen\n";
+    cout << "----------Operating Systems Command Line Emulator----------" << endl;
+    cout << "===========================================================\n" << endl;
+    menu();
+}
+
+void Console::menu()
+{
+    cout << "Available commands:" << endl;
+    cout << "  initialize     - Initialize system" << endl;
+    cout << "  screen -r <name> - Display screen for a process" << endl;
+    cout << "  screen -s <name> - Create a new screen for a process" << endl;
+    cout << "  screen -ls       - List system utilization and processes" << endl;
+    cout << "  scheduler-start - Start scheduler" << endl;
+    cout << "  scheduler-stop - Stop scheduler" << endl;
+    cout << "  report-util    - Report system utilization" << endl;
+    cout << "  clear          - Clear screen" << endl;
+    cout << "  exit           - Exit application\n\n" << endl;
 }
 
 void Console::start() {
+ 
     string exitInput = "exit";
 
     while (this->userInput != exitInput) {
@@ -58,6 +71,7 @@ void Console::start() {
 }
 
 void Console::initialize() {
+    clear();
     // Banner with green color
     std::cout << "\033[32m"; // Set green
     std::cout << "===============================\n";
@@ -76,11 +90,13 @@ void Console::initialize() {
         auto process = make_shared<Process>(processName, commands, memory);
         processes.push_back(process);
 
-#ifdef RR_SCHEDULER
-        rrScheduler->enqueueProcess(process);
-#else
-        fcfsScheduler->addProcess(process);
-#endif
+
+        if (schedulerType == "rr") {
+            rrScheduler->enqueueProcess(process);
+        }
+        else {
+            fcfsScheduler->addProcess(process);
+        }
     }
 
     // Confirmation summary in cyan
@@ -92,51 +108,46 @@ void Console::initialize() {
 
 
 void Console::schedulerStart() {
-#ifdef RR_SCHEDULER
+    clear();
+
     if (processes.empty()) {
-        std::cout << "\033[36m"; // Set cyan
+        std::cout << "\033[36m"; // Cyan
         std::cout << "No processes to schedule. Use 'initialize' first.\n";
         std::cout << "\033[0m";
         return;
     }
 
-    // Green header banner
-    std::cout << "\033[32m"; // Green
-    std::cout << "=====================================\n";
-    std::cout << "|      SCHEDULER START (RR)         |\n";
-    std::cout << "=====================================\n";
-    std::cout << "\033[0m";
-
-    // Blue info text
-    std::cout << "\033[36m"; // Set cyan
-    std::cout << "Starting Round Robin scheduler with " << cpuCount << " CPUs and time quantum " << timeQuantum << "\n";
-    rrScheduler->start();
-    schedulerRunning = true;
-    std::cout << "Scheduler started successfully.\n\n";
-    std::cout << "\033[0m";
-#else
-    if (processes.empty()) {
-        std::cout << "\033[36m"; // Set cyan
-        std::cout << "No processes to schedule. Use 'initialize' first.\n";
+    if (schedulerType == "rr") {
+        // Header
+        std::cout << "\033[32m"; // Green
+        std::cout << "=====================================\n";
+        std::cout << "|      SCHEDULER START (RR)         |\n";
+        std::cout << "=====================================\n";
         std::cout << "\033[0m";
-        return;
+
+        std::cout << "\033[36m"; // Cyan
+        std::cout << "Starting Round Robin scheduler with " << cpuCount << " CPUs and time quantum " << timeQuantum << "\n";
+        rrScheduler->start();
+        schedulerRunning = true;
+        std::cout << "Scheduler started successfully.\n\n";
+        std::cout << "\033[0m";
+    } else {
+        // Header
+        std::cout << "\033[32m"; // Green
+        std::cout << "=====================================\n";
+        std::cout << "|    SCHEDULER START (FCFS)         |\n";
+        std::cout << "=====================================\n";
+        std::cout << "\033[0m";
+
+        std::cout << "\033[36m"; // Cyan
+        std::cout << "Starting FCFS scheduler with " << cpuCount << " CPUs\n";
+        fcfsScheduler->start();
+        schedulerRunning = true;
+        std::cout << "FCFS scheduler started successfully.\n\n";
+        std::cout << "\033[0m";
     }
-
-    // Green header banner
-    std::cout << "\033[32m"; // Green
-    std::cout << "=====================================\n";
-    std::cout << "|    SCHEDULER START (FCFS)         |\n";
-    std::cout << "=====================================\n";
-    std::cout << "\033[0m";
-
-    std::cout << "\033[36m"; // Set cyan
-    std::cout << "Starting FCFS scheduler with " << cpuCount << " CPUs\n";
-    fcfsScheduler->start();
-    schedulerRunning = true;
-    std::cout << "FCFS scheduler started successfully.\n\n";
-    std::cout << "\033[0m";
-#endif
 }
+
 
 
 void Console::screen() {
@@ -330,19 +341,22 @@ void Console::listProcesses() {
 
     // Light yellow for process rows
     std::cout << "\033[93m";
-#ifdef RR_SCHEDULER
-    for (const auto& process : processes) {
-        process->displayProcess(); // Make sure displayProcess() does not override color
+    if (schedulerType == "rr") {
+        for (const auto& process : processes) {
+            process->displayProcess(); 
+        }
     }
-#else
-    fcfsScheduler->displayProcesses();
-#endif
+    else {
+        fcfsScheduler->displayProcesses();
+    }
+
     std::cout << "\033[0m";
 
     std::cout << "\033[32m";
     std::cout << "=====================================================================\n";
     std::cout << "\033[0m";
 }
+
 
 
 void Console::displayContinuousUpdates() {
@@ -354,105 +368,119 @@ void Console::displayContinuousUpdates() {
 }
 
 void Console::schedulerTest() {
-#ifdef RR_SCHEDULER
     if (processes.empty()) {
-        cout << "No processes to schedule. Use 'initialize' first.\n";
+        std::cout << "No processes to schedule. Use 'initialize' first.\n";
         return;
     }
 
-    cout << "Starting Round Robin scheduler test with " << cpuCount << " CPUs and time quantum " << timeQuantum << "\n";
-    cout << "Press any key to stop the test...\n";
+    std::cout << (schedulerType == "rr"
+        ? "Starting Round Robin scheduler test with " + std::to_string(cpuCount) + " CPUs and time quantum " + std::to_string(timeQuantum)
+        : "Starting FCFS scheduler test with " + std::to_string(cpuCount) + " CPUs") << "\n";
 
-    // Start scheduler in background
+    std::cout << "Press any key to stop the test...\n";
+
     schedulerRunning = true;
-    thread schedulerThread([this]() {
-        rrScheduler->start();
+
+    std::thread schedulerThread([this]() {
+        if (schedulerType == "rr") {
+            rrScheduler->start();
+        }
+        else {
+            fcfsScheduler->start();
+        }
         });
 
-    // Start display thread
-    thread displayThread(&Console::displayContinuousUpdates, this);
+    std::thread displayThread(&Console::displayContinuousUpdates, this);
 
-    // Wait for user input
-    cin.ignore(); // Clear any existing input
-    cin.get();    // Wait for any key press
+    std::cin.ignore(); // Clear any existing input
+    std::cin.get();    // Wait for any key press
 
-    // Clean up
     schedulerRunning = false;
-    rrScheduler->stop();
+
+    if (schedulerType == "rr") {
+        rrScheduler->stop();
+    }
+    else {
+        fcfsScheduler->stop();
+    }
 
     if (schedulerThread.joinable()) {
         schedulerThread.join();
     }
+
     if (displayThread.joinable()) {
         displayThread.join();
     }
 
-    cout << "Scheduler test stopped.\n";
-#else
-    if (processes.empty()) {
-        cout << "No processes to schedule. Use 'initialize' first.\n";
-        return;
-    }
-
-    cout << "Starting FCFS scheduler test with " << cpuCount << " CPUs\n";
-    cout << "Press any key to stop the test...\n";
-
-    // Start scheduler in background
-    schedulerRunning = true;
-    thread schedulerThread([this]() {
-        fcfsScheduler->start();
-        });
-
-    // Start display thread
-    thread displayThread(&Console::displayContinuousUpdates, this);
-
-    // Wait for user input
-    cin.ignore(); // Clear any existing input
-    cin.get();    // Wait for any key press
-
-    // Clean up
-    schedulerRunning = false;
-    fcfsScheduler->stop();
-
-    if (schedulerThread.joinable()) {
-        schedulerThread.join();
-    }
-    if (displayThread.joinable()) {
-        displayThread.join();
-    }
-
-    cout << "FCFS scheduler test stopped.\n";
-#endif
+    std::cout << (schedulerType == "rr" ? "Scheduler test stopped.\n" : "FCFS scheduler test stopped.\n");
 }
 
+
 void Console::schedulerStop() {
-#ifdef RR_SCHEDULER
     if (schedulerRunning) {
-        cout << "Stopping Round Robin scheduler...\n";
-        rrScheduler->stop();
+        if (schedulerType == "rr") {
+            std::cout << "Stopping Round Robin scheduler...\n";
+            rrScheduler->stop();
+            std::cout << "Scheduler stopped successfully.\n";
+        }
+        else {
+            std::cout << "Stopping FCFS scheduler...\n";
+            fcfsScheduler->stop();
+            std::cout << "FCFS scheduler stopped successfully.\n";
+        }
         schedulerRunning = false;
-        cout << "Scheduler stopped successfully.\n";
     }
     else {
-        cout << "Scheduler is not currently running.\n";
+        std::cout << "Scheduler is not currently running.\n";
     }
-#else
-    if (schedulerRunning) {
-        cout << "Stopping FCFS scheduler...\n";
-        fcfsScheduler->stop();
-        schedulerRunning = false;
-        cout << "FCFS scheduler stopped successfully.\n";
-    }
-    else {
-        cout << "Scheduler is not currently running.\n";
-    }
-#endif
 }
 
 
 void Console::reportUtil() {
-    cout << "report-util command is recognized. Doing something.\n";
+    std::ofstream file("csopesy-log.txt");
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open csopesy-log.txt for writing.\n";
+        return;
+    }
+
+    if (processes.empty()) {
+        file << "No processes available.\n";
+        file.close();
+        return;
+    }
+
+    // Timestamp
+    file << "List of processes (Saved at " << getCurrentTime() << "):\n";
+    file << "=====================================================================\n";
+
+    printUtilization(&file);  
+
+    // Column headers
+    file << std::left << std::setw(10) << "Name"
+        << std::setw(25) << "Start Time"
+        << std::setw(15) << "Status"
+        << std::setw(15) << "Progress"
+        << std::setw(10) << "Memory"
+        << "Core Assignment\n";
+
+    file << "=====================================================================\n\n";
+
+    if (schedulerType == "rr") {
+        for (const auto& process : processes) {
+            process->displayProcess(file);  // assume overloaded
+        }
+    }
+    else {
+        fcfsScheduler->displayProcesses(file);  // also overloaded
+    }
+
+
+    file << "=====================================================================\n";
+    file.close();
+
+    cout << "Report generated at ./Debug/csopesy-log.txt! << endl" << endl;
 }
+
 
 void Console::clear() {
     system("cls");

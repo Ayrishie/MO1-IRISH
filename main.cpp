@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <algorithm> 
 
 #include "Console.h"
 #include "FCFSScheduler.h"
@@ -15,29 +16,47 @@ int main() {
         std::cerr << "Error: could not open config.txt\n";
         return 1;
     }
-    std::string key, schedulerType;
+    std::string key, value, schedulerType;
     int numCpu = 1;
     int quantumCycles = 0;
+    int batchProcessFreq = 1;
+    int minIns = 1000;
+    int maxIns = 2000;
+    int delayPerExec = 0;
 
-    while (cfg >> key) {
+    while (cfg >> key >> value) {
+        // Remove quotes if any
+        value.erase(std::remove(value.begin(), value.end(), '\"'), value.end());
+
         if (key == "scheduler") {
-            cfg >> schedulerType;            // “fcfs” or “rr”
+            schedulerType = value;
         }
         else if (key == "num-cpu") {
-            cfg >> numCpu;                   // e.g. 4
+            numCpu = std::stoi(value);
         }
         else if (key == "quantum-cycles") {
-            cfg >> quantumCycles;            // e.g. 10 (only used for RR)
+            quantumCycles = std::stoi(value);
+        }
+        else if (key == "batch-process-freq") {
+            batchProcessFreq = std::stoi(value);
+        }
+        else if (key == "min-ins") {
+            minIns = std::stoi(value);
+        }
+        else if (key == "max-ins") {
+            maxIns = std::stoi(value);
+        }
+        else if (key == "delay-per-exec") {
+            delayPerExec = std::stoi(value);
         }
         else {
-            // skip unknown key’s value
-            std::string dummy;
-            cfg >> dummy;
+            std::cout << "Warning: unknown key \"" << key << "\" skipped\n";
         }
     }
 
     
     std::unique_ptr<Scheduler> sched;
+
     if (schedulerType == "fcfs") {
         sched = std::make_unique<FCFSScheduler>(numCpu);
     }
@@ -45,17 +64,17 @@ int main() {
         sched = std::make_unique<RRScheduler>(numCpu, quantumCycles);
     }
     else {
-        std::cerr << "Error: unknown scheduler type '" 
-                  << schedulerType << "' in config.txt\n";
+        std::cerr << "Error: unknown scheduler type '" << schedulerType << "' in config.txt\n";
         return 1;
     }
 
- 
-    Console console(*sched, numCpu, quantumCycles);
 
+
+    Console console(*sched, numCpu, quantumCycles, batchProcessFreq, minIns, maxIns, delayPerExec, schedulerType);
     
     console.header();
     console.start();
 
     return 0;
+
 }

@@ -78,6 +78,7 @@ public:
 
     // Methods for screen command support
     void displayProcessInfo() const;
+    void displayProcess(std::ostream& out) const;
 
     // ——— Rolling buffer API ———
         /// Append one line to our in-memory buffer (auto-trims to last N)

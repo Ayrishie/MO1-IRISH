@@ -33,6 +33,7 @@ public:
     void stop();
     void addProcess(std::shared_ptr<Process> process);
     void displayProcesses() const;
+    void displayProcesses(std::ostream& out) const;
     bool allProcessesFinished() const;
 
     std::shared_ptr<Process> getProcess(const std::string& name) const override;

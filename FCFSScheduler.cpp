@@ -85,6 +85,26 @@ void FCFSScheduler::displayProcesses() const {
     }
 }
 
+void FCFSScheduler::displayProcesses(std::ostream& out) const {
+    std::lock_guard<std::mutex> lock(queue_mutex);
+
+    out << "Active processes:\n";
+    for (const auto& p : processes) {
+        if (!p->isFinished()) {
+            p->displayProcess(out);  // this is the overloaded one
+        }
+    }
+
+    out << "Completed processes:\n";
+    for (const auto& p : processes) {
+        if (p->isFinished()) {
+            p->displayProcess(out);
+        }
+    }
+}
+
+
+
 bool FCFSScheduler::allProcessesFinished() const {
     std::lock_guard<std::mutex> lock(queue_mutex);
     for (const auto& p : processes) {

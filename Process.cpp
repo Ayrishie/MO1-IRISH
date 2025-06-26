@@ -96,19 +96,23 @@ string Process::getStatus() const {
     return getCoreAssignment();
 }
 
-void Process::displayProcess() const {
+void Process::displayProcess(std::ostream& out) const {
     int exec = executed_commands.load();
     int total = total_commands;
-    string status = getStatus();
-    string coreInfo = (status != "Finished") ? " (Core " + to_string(core_id.load()) + ")" : "";
+    std::string status = getStatus();
+    std::string coreInfo = (status != "Finished") ? " (Core " + std::to_string(core_id.load()) + ")" : "";
 
-    cout << left << setw(10) << name
-        << setw(25) << ("(" + getFormattedTime() + ")")
-        << setw(15) << status
-        << setw(15) << (to_string(exec) + "/" + to_string(total))
-        << setw(10) << ("[" + to_string(memory) + " KB]")
+    out << std::left << std::setw(10) << name
+        << std::setw(25) << ("(" + getFormattedTime() + ")")
+        << std::setw(15) << status
+        << std::setw(15) << (std::to_string(exec) + "/" + std::to_string(total))
+        << std::setw(10) << ("[" + std::to_string(memory) + " KB]")
         << coreInfo
         << "\n";
+}
+
+void Process::displayProcess() const {
+    displayProcess(std::cout);
 }
 
 void Process::executeCommand(int coreId) {

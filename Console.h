@@ -20,6 +20,7 @@ using namespace std;
 
 class Console {
 private:
+
     string userInput;
     unique_ptr<RRScheduler> rrScheduler;
   
@@ -34,12 +35,20 @@ private:
 
     // this is the change
     Scheduler& scheduler;
+
+    int batchProcessFreq;
+    int minInstructions;
+    int maxInstructions;
+    int delayPerExecution;
+    std::string schedulerType;
        
     
 
 public:
-    Console(Scheduler& sched, int cpuCount, int timeQuantum); // default constructor (non-parameterized)
+    Console(Scheduler& sched, int cpuCount, int timeQuantum, int batchFreq, int minIns, int maxIns, int delay, std::string schedulerType); // default constructor (non-parameterized)
+
     void header();
+    void menu();
     void start();
     void initialize();
     void screen();
