@@ -26,10 +26,13 @@ private:
     std::unique_ptr<RRScheduler> rrScheduler;
     std::unique_ptr<FCFSScheduler> fcfsScheduler;
 
+    std::mutex processesMutex;
+    std::thread schedulerThread;
+
     std::atomic<bool> schedulerRunning = false;
     std::atomic<bool> testModeRunning = false;
 
-    int pidCounter = 0; 
+    std::atomic<int> pidCounter{ 0 };
     int cpuCount = 0;
     int timeQuantum = 0;
     int batchProcessFreq = 0;
@@ -51,6 +54,8 @@ public:
     void header();
     void menu();
     void start();
+    void createProcessFromCommand(const std::string& procName);
+    void attachToProcessScreen(const std::string& procName);
     void initialize();
     void clear();
     void screen();

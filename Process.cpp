@@ -96,6 +96,11 @@ string Process::getStatus() const {
     return getCoreAssignment();
 }
 
+std::string Process::getName() const {
+    return name;
+}
+
+
 void Process::displayProcess(std::ostream& out) const {
     int exec = executed_commands.load();
     int total = total_commands;

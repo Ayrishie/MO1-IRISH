@@ -55,6 +55,7 @@ public:
     // Original methods
     std::string getFormattedTime() const;
     std::string getStatus() const;
+    std::string getName() const;
     void displayProcess() const;
     bool isFinished() const;
     std::string getCoreAssignment() const;
@@ -96,6 +97,7 @@ public:
     void clearRecentOutputs() {
         outputBuffer.clear();
     }
+
 };
 
 #endif // PROCESS_H
