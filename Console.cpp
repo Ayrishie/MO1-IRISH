@@ -65,12 +65,30 @@ void Console::start() {
 }
 
 void Console::initialize() {
+
+    if (schedulerRunning) {
+        std::cerr << "\033[31m";
+        std::cerr << "Error: Cannot re-initialize system while scheduler is running.\n";
+        std::cerr << "Stop the scheduler first using 'scheduler-stop'.\n";
+        std::cerr << "\033[0m";
+        return;
+    }
+
+    if (isInitialized) {
+        std::cout << "\033[33m";
+        std::cout << "System is already initialized. Skipping re-initialization.\n";
+        std::cout << "\033[0m";
+        return;
+    }
+
     clear();
+
     std::ifstream config("config.txt");
     if (!config.is_open()) {
         std::cerr << "Error: Could not open config.txt\n";
         return;
     }
+
 
     // Set default values (matches old main.cpp)
     cpuCount = 1;
@@ -146,6 +164,7 @@ void Console::initialize() {
             std::cerr << "Error: unknown scheduler type '" << schedulerType << "' in config.txt\n";
         }
     }
+    isInitialized = true;
 
 }
 
