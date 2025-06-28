@@ -26,6 +26,7 @@ private:
     std::unique_ptr<RRScheduler> rrScheduler;
     std::unique_ptr<FCFSScheduler> fcfsScheduler;
 
+    bool isInitialized = false;
     std::mutex processesMutex;
     std::thread schedulerThread;
 
