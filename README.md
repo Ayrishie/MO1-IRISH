@@ -1,4 +1,3 @@
-![image](https://github.com/user-attachments/assets/b6ada65b-7f04-477e-9b5c-f5847f4b12a5)![image](https://github.com/user-attachments/assets/86f875aa-9b29-4240-8872-ac5a25d73c9f)# MO1 – Process Multiplexer and CLI Emulator (CSOPESY)
 
 ## Author
 BALDEROSA, CHAN, RAMOS, TAMSE
