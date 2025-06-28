@@ -191,7 +191,7 @@ void Console::schedulerStart() {
     std::cout << "Process will be generated every " << batchProcessFreq << " ticks\n";
     std::cout << "\033[0m";
 
-    std::thread schedulerThread([this]() {
+    schedulerThread = std::thread([this]() { {
         int tick = 0;
 
         while (schedulerRunning) {
