@@ -76,7 +76,7 @@ void Console::initialize() {
 
     if (isInitialized) {
         std::cout << "\033[33m";
-        std::cout << "System is already initialized. Skipping re-initialization.\n";
+        std::cout << "System was already initialized then Run. Please Restart the program.\n";
         std::cout << "\033[0m";
         return;
     }
@@ -164,8 +164,6 @@ void Console::initialize() {
             std::cerr << "Error: unknown scheduler type '" << schedulerType << "' in config.txt\n";
         }
     }
-    isInitialized = true;
-
 }
 
 
@@ -243,7 +241,7 @@ void Console::schedulerStart() {
         }
         });
 
-
+    isInitialized = true;
     std::cout << "\033[36mScheduler started successfully.\n\n\033[0m";
 }
 
