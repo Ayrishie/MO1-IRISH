@@ -191,7 +191,7 @@ void Console::schedulerStart() {
     std::cout << "Process will be generated every " << batchProcessFreq << " ticks\n";
     std::cout << "\033[0m";
 
-    schedulerThread = std::thread([this]() { {
+    schedulerThread = std::thread([this]() {
         int tick = 0;
 
         while (schedulerRunning) {
@@ -199,7 +199,9 @@ void Console::schedulerStart() {
             tick++;
 
             if (tick % batchProcessFreq == 0) {
-                std::string name = "P" + std::to_string(++pidCounter);
+                std::ostringstream nameStream;
+                nameStream << "p" << std::setfill('0') << std::setw(2) << ++pidCounter;
+                std::string name = nameStream.str();
                 int commands = minInstructions + (rand() % (maxInstructions - minInstructions + 1));
                 size_t memory = 512 + (pidCounter * 64);
                 auto process = std::make_shared<Process>(name, commands, memory);
