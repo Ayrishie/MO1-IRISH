@@ -1,7 +1,6 @@
 #pragma once
 
-#include <iostream> // debuug
-
+#include <iostream>
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -9,7 +8,6 @@
 #include <condition_variable>
 #include <chrono>
 #include "Process.h"
-#include "CPUWorker.h"
 #include "Scheduler.h"
 
 using namespace std;
@@ -19,39 +17,30 @@ using namespace this_thread;
 class RRScheduler: public Scheduler {
 private:
 	const int cores;                                  // number of CPUs, constant -> fixed by default
+	const int delayPerExecution;
 	const int quantum;                                // time quantum, also fixed
 	queue<shared_ptr<Process>> readyQueue;            // ready queue (uses shared pointers for Process objects)
-	//new
-	std::vector<std::shared_ptr<Process>> processes; // ensure you track all procs here
-	vector<CPU> cpus;                                 // container of CPU objects
-
-	atomic<bool> endThreads;                          // marker for ending threads (atomic, so it's thread-safe)
+	queue<shared_ptr<Process>> tempQueue;
+	vector<shared_ptr<Process>> processes;            // ensure you track all procs here
 	vector<thread> cpuThreads;                        // container of CPU threads
-	mutex schedulerMutex;                             // manage shared access to the ready queue
-	mutable mutex cpuMutex;                           // for lockinbg CPUs
-	mutex logMutex;                                   // locking logs 
-	condition_variable queueCondition;                // used for telling CPU threads when a process is available in ready queue
+	mutable mutex queue_mutex;
+	condition_variable cv;
 	bool verbose = false;
+	atomic<bool> scheduler_running;                          // marker for ending threads (atomic, so it's thread-safe)
 
+	void scheduleCPU(int coreId);
 
 public:
-	RRScheduler(int cores, int quantum);
-
-	CPU* getCPU();
-
-	void initializeCPUs(int numCPUs);
+	RRScheduler(int cores, int quantum, int delayPerExecution);
+	~RRScheduler();
 
 	void enqueueProcess(shared_ptr<Process> process);
-
-	void scheduleCPU();
-
 	void start();
-
 	void stop();
 	void setVerbose(bool v) { verbose = v; }
+	void displayProcesses() const;
+	void displayProcesses(std::ostream& out) const;
 	bool allProcessesFinished() const;
-	void executeOneStep();
-
 
 	//new
 	std::shared_ptr<Process> getProcess(const std::string& name) const override;

@@ -1,100 +1,131 @@
 #include "RRScheduler.h"
 
-// Constructor
-RRScheduler::RRScheduler(int cores, int quantum) : cores(cores), quantum(quantum), endThreads(false) {
-    for (int i = 0; i < cores; i++) {
-        this->cpus.push_back(CPU(i)); // see CPU class constructor
-    }
+RRScheduler::RRScheduler(int cores, int quantum, int delayPerExecution) 
+    : cores(cores), quantum(quantum), delayPerExecution(delayPerExecution), scheduler_running(false) {}
+
+RRScheduler::~RRScheduler() {
+    stop();
 }
 
-// Create a number of CPUs
-void RRScheduler::initializeCPUs(int numCPUs) {
-    for (int i = 0; i < numCPUs; i++) {
-        this->cpus.push_back(CPU(i)); // see CPU class constructor
-    }
-}
-
-// Find a free CPU sequentially (top-bottom )  
-CPU* RRScheduler::getCPU() {
-    lock_guard<mutex> lock(cpuMutex); // protect the check and update atomically
-    for (auto& cpu : this->cpus) {
-        if (cpu.getStatus() == IDLE) {
-            cpu.setStatus(BUSY); // claim it immediately
-            return &cpu;
-        }
-    }
-    return nullptr;
-}
-
-// Method for the ready queue (enqueues processes at the tail of the ready queue) 
-void RRScheduler::enqueueProcess(shared_ptr<Process> process) {
-    lock_guard<mutex> lock(schedulerMutex);   // make sure access is restricted to one thread at a time
-    this->readyQueue.push(process);           // only then enqueue a process at the ready queue
-    queueCondition.notify_one();                  // tell a waiting thread that a process is now available (see scheduleCPU() for more)
-}
-
-// Method for a CPU thread (this is what a specific CPU does)
-void RRScheduler::scheduleCPU() {
-    while (!endThreads) {
+void RRScheduler::scheduleCPU(int coreId) {
+    while (scheduler_running) {
         shared_ptr<Process> process;
-        CPU* cpu = getCPU();
+        { // lock the access for the ready queue
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            cv.wait(lock, [this] { //wait for aprocess or scheduler stop
+                return !readyQueue.empty() || !scheduler_running;
+                });
 
-        if (!cpu) {
-            this_thread::sleep_for(chrono::milliseconds(10));
-            continue;
-        }
+            if (!scheduler_running) break; // if scheduler stop then end the loop
+            if (readyQueue.empty()) continue; // still nothing to run
 
-        {
-            unique_lock<mutex> lock(schedulerMutex);
-            if (readyQueue.empty()) {
-                cpu->setStatus(IDLE);
-                lock.unlock();
-                this_thread::sleep_for(chrono::milliseconds(10));
-                continue;
-            }
-
+            //dequeue next process
             process = readyQueue.front();
             readyQueue.pop();
         }
 
-        int timeUsed = 0;
-        while (timeUsed < quantum && !process->isFinished()) {
-            cpu->runProcess(process);
-            timeUsed++;
-            this_thread::sleep_for(chrono::milliseconds(50)); // Simulate work
-        }
+        if (!process || process->isFinished()) continue; // skip process if null or finished
 
-        if (!process->isFinished()) {
-            enqueueProcess(process);
+        if (process && !process->isFinished()) {
+            process->core_id = coreId;
+
+            int quantumUsed = 0;
+            while (quantumUsed < quantum && !process->isFinished()) {
+                // get the amount of executed cinstruction first
+                int prevInstructions = process->executed_commands;
+
+                process->executeCommand(coreId); //execute the process
+
+                if (process->executed_commands > prevInstructions) { //if instruction was executed then increment quantum cycle usage
+                    quantumUsed++;
+                }
+                // Simulate work
+                std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
+            }
+
+            process->core_id = -1;
+
+            // requeue process if it isn't finished
+            if (!process->isFinished()) {
+                std::lock_guard<std::mutex> lock(queue_mutex);
+                readyQueue.push(process);
+                cv.notify_all();
+            }
         }
-        cpu->setStatus(IDLE);
     }
 }
 
-// Main entry point for the round robin scheduler (this is where all threads start, and end)
+void RRScheduler::enqueueProcess(shared_ptr<Process> process) {
+    {
+        std::lock_guard<std::mutex> lock(queue_mutex);
+        readyQueue.push(process);
+        processes.push_back(process);
+    }
+    cv.notify_all();
+}
+
 void RRScheduler::start() {
-    endThreads = false;
-    cpuThreads.clear();
-    for (int i = 0; i < this->cores; i++) {
-        cpuThreads.emplace_back([this]() { this->scheduleCPU(); });
+    if (scheduler_running) return;
+
+    scheduler_running = true;
+    for (int i = 0; i < cores; ++i) {
+        cpuThreads.emplace_back([this, i] { scheduleCPU(i); });
     }
 }
 
 // Join all threads to end the scheduler
 void RRScheduler::stop() {
-    // End the scheduler
-    {
-        lock_guard<mutex> lock(schedulerMutex);            // lock again during shutting down
-        endThreads = true;                                // time for joining threads
-    }
-    queueCondition.notify_all();               //tell all threads for exit
+    scheduler_running = false;
+    cv.notify_all();
 
-    // join threads
     for (auto& thread : cpuThreads) {
-        if (thread.joinable()) {
-            thread.join();                       
+        if (thread.joinable()) thread.join();
+    }
+    cpuThreads.clear();
+}
+
+void RRScheduler::displayProcesses() const {
+    std::lock_guard<std::mutex> lock(queue_mutex);
+
+    std::cout << "Active processes:\n";
+    for (const auto& p : processes) {
+        if (!p->isFinished()) {
+            p->displayProcess();
         }
     }
+
+    std::cout << "Completed processes:\n";
+    for (const auto& p : processes) {
+        if (p->isFinished()) {
+            p->displayProcess();
+        }
+    }
+}
+
+void RRScheduler::displayProcesses(std::ostream& out) const {
+    std::lock_guard<std::mutex> lock(queue_mutex);
+
+    out << "Active processes:\n";
+    for (const auto& p : processes) {
+        if (!p->isFinished()) {
+            p->displayProcess(out);  // this is the overloaded one
+        }
+    }
+
+    out << "Completed processes:\n";
+    for (const auto& p : processes) {
+        if (p->isFinished()) {
+            p->displayProcess(out);
+        }
+    }
+}
+
+bool RRScheduler::allProcessesFinished() const {
+    std::lock_guard<std::mutex> lock(queue_mutex);
+    for (const auto& p : processes) {
+        if (!p->isFinished()) return false;
+    }
+    return true;
 }
 
 std::shared_ptr<Process> RRScheduler::getProcess(const std::string& name) const {
