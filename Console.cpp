@@ -1,5 +1,5 @@
 ﻿#include "Console.h"
-
+#include <cstdlib>
 
 #include "Console.h"
 #include <iostream>
@@ -646,6 +646,12 @@ void Console::clear() {
 
 void Console::parseInput(string userInput) {
     transform(userInput.begin(), userInput.end(), userInput.begin(), ::tolower);
+
+
+    if (userInput == "exit") {
+        // immediate, no-destructors termination:
+        std::_Exit(EXIT_SUCCESS);
+    }
 
     if (userInput == "initialize") {
         initialize();
