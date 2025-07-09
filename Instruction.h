@@ -126,16 +126,20 @@ private:
 
 public:
     AddInstruction(const std::string& res, const std::string& op1, const std::string& op2)
-        : result(res), operand1(op1), operand2(op2), op1Value(0), op2Value(0), op1IsValue(false), op2IsValue(false) {}
+        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false) {
+    }
 
     AddInstruction(const std::string& res, const std::string& op1, uint16_t op2)
-        : result(res), operand1(op1), operand2(""), op1Value(0), op2Value(op2), op1IsValue(false), op2IsValue(true) {}
+        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true) {
+    }
 
     AddInstruction(const std::string& res, uint16_t op1, const std::string& op2)
-        : result(res), operand1(""), operand2(op2), op1Value(op1), op2Value(0), op1IsValue(true), op2IsValue(false) {}
+        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false) {
+    }
 
     AddInstruction(const std::string& res, uint16_t op1, uint16_t op2)
-        : result(res), operand1(""), operand2(""), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true) {}
+        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true) {
+    }
 
     bool execute(ProcessContext& context) override {
         uint16_t val1 = op1IsValue ? op1Value : context.getVariable(operand1);
@@ -169,17 +173,20 @@ private:
 
 public:
     SubtractInstruction(const std::string& res, const std::string& op1, const std::string& op2)
-        : result(res), operand1(op1), operand2(op2), op1Value(0), op2Value(0), op1IsValue(false), op2IsValue(false) {}
+        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false) {
+    }
 
     SubtractInstruction(const std::string& res, const std::string& op1, uint16_t op2)
-        : result(res), operand1(op1), operand2(""), op1Value(0), op2Value(op2), op1IsValue(false), op2IsValue(true) {}
+        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true) {
+    }
 
     SubtractInstruction(const std::string& res, uint16_t op1, const std::string& op2)
-        : result(res), operand1(""), operand2(op2), op1Value(op1), op2Value(0), op1IsValue(true), op2IsValue(false) {}
+        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false) {
+    }
 
     SubtractInstruction(const std::string& res, uint16_t op1, uint16_t op2)
-        : result(res), operand1(""), operand2(""), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true) {}
-
+        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true) {
+    }
 
     bool execute(ProcessContext& context) override {
         uint16_t val1 = op1IsValue ? op1Value : context.getVariable(operand1);
