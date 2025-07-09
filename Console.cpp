@@ -260,7 +260,7 @@ void Console::schedulerStart() {
                 nameStream << "p" << std::setfill('0') << std::setw(2) << ++pidCounter;
                 std::string name = nameStream.str();
                 int commands = minInstructions + (rand() % (maxInstructions - minInstructions + 1));
-                size_t memory = 512 + (pidCounter * 64);
+                size_t memory = memPerProc; 
                 auto process = std::make_shared<Process>(name, commands, memory);
                 {
                     std::lock_guard<std::mutex> lock(processesMutex);
@@ -306,7 +306,7 @@ void Console::createProcessFromCommand(const std::string& procName) {
         }
     }
     int commands = minInstructions + (rand() % (maxInstructions - minInstructions + 1));
-    size_t memory = 512 + (pidCounter * 64);
+    size_t memory = memPerProc; 
     auto process = std::make_shared<Process>(procName, commands, memory);
     {
         std::lock_guard<std::mutex> lock(processesMutex);
