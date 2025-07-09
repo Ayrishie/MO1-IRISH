@@ -40,6 +40,9 @@ private:
     int minInstructions = 0;
     int maxInstructions = 0;
     int delayPerExecution = 0;
+    int maxOverallMem = 0;
+    int memPerFrame = 0;
+    int memPerProc = 0;
     std::string schedulerType;
 
     // Private functions
@@ -65,6 +68,9 @@ public:
     void schedulerTest();
     void reportUtil();
     void parseInput(std::string userInput);
+
+    // NEW
+    bool memoryCheck(int maxMem, int frameSize, int procMem);
 };
 
 #endif

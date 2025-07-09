@@ -124,7 +124,14 @@ void Console::initialize() {
             else if (key == "min-ins") minInstructions = std::stoi(value);
             else if (key == "max-ins") maxInstructions = std::stoi(value);
             else if (key == "delay-per-exec") delayPerExecution = std::stoi(value);
+            else if (key == "max-overall-mem") maxOverallMem = std::stoi(value);
+            else if (key == "mem-per-frame") memPerFrame = std::stoi(value);
+            else if (key == "mem-per-proc") memPerProc = std::stoi(value);
             else std::cout << "Warning: unknown key \"" << key << "\" skipped\n";
+        }
+
+        if (!memoryCheck(maxOverallMem, memPerFrame, memPerProc)) {
+            return;
         }
 
         // Show config summary
@@ -148,6 +155,9 @@ void Console::initialize() {
         std::cout << "Batch Frequency: " << batchProcessFreq << " ticks\n";
         std::cout << "Instructions: " << minInstructions << " to " << maxInstructions << "\n";
         std::cout << "Delay per Exec: " << delayPerExecution << "ms\n";
+        std::cout << "Max overall Mem: " << maxOverallMem << "bytes\n";
+        std::cout << "Mem per Frame " << memPerFrame << "bytes\n";
+        std::cout << "Mem per Proc: " << memPerProc << "bytes\n";
         std::cout << "\033[0m";
 
         processes.clear();
@@ -164,6 +174,36 @@ void Console::initialize() {
             std::cerr << "Error: unknown scheduler type '" << schedulerType << "' in config.txt\n";
         }
     }
+}
+
+bool Console:: memoryCheck(int maxMem, int frameSize, int procMem) {
+    auto isPowerOfTwo = [](int x) {
+        return x > 0 && (x & (x - 1)) == 0;
+        };
+
+    if (!isPowerOfTwo(maxMem) || !isPowerOfTwo(frameSize) || !isPowerOfTwo(procMem)) {
+        std::cerr << "\033[31mError: Memory values must be powers of 2\033[0m\n";
+        return false;
+    }
+
+    if (maxMem < 64 || maxMem > 65536 ||
+        frameSize < 16 || frameSize > 65536 || // Change this to 64 after
+        procMem < 64 || procMem > 65536) {
+        std::cerr << "\033[31mError: Memory values must be in range [64, 65536]\033[0m\n";
+        return false;
+    }
+
+    if (maxMem % frameSize != 0) {
+        std::cerr << "\033[31mError: maxOverallMem must be divisible by memPerFrame\033[0m\n";
+        return false;
+    }
+
+    if (procMem > maxMem) {
+        std::cerr << "\033[31mError: memPerProc exceeds maxOverallMem\033[0m\n";
+        return false;
+    }
+
+    return true;
 }
 
 
