@@ -17,6 +17,7 @@
 #include "RRScheduler.h"
 #include "FCFSScheduler.h"
 #include "Scheduler.h"
+#include "MemoryManager.h"
 
 class Console {
 private:
@@ -50,6 +51,9 @@ private:
     void showProcessScreen(const std::string& procName);
     void printUtilization(std::ostream* out = nullptr) const;
     void listProcesses();
+
+    // New
+    std::unique_ptr<MemoryManager> memoryManager;
 
 public:
     Console(); // Default constructor

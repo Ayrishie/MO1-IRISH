@@ -10,6 +10,8 @@
 
 //NEW
 #include "Scheduler.h"
+#include "MemoryManager.h"
+
 
 class FCFSScheduler: public Scheduler {
 private:
@@ -26,8 +28,11 @@ private:
 
     void cpuWorker(int coreId);
 
+    // New
+    MemoryManager* memoryManager = nullptr;
+
 public:
-    explicit FCFSScheduler(int cores, int delayPerExecution);
+    FCFSScheduler(int cores, int delayPerExecution, MemoryManager* memMgr);
     ~FCFSScheduler();
 
     void start();

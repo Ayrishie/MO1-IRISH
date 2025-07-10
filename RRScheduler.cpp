@@ -1,7 +1,7 @@
 #include "RRScheduler.h"
 
-RRScheduler::RRScheduler(int cores, int quantum, int delayPerExecution) 
-    : cores(cores), quantum(quantum), delayPerExecution(delayPerExecution), scheduler_running(false) {}
+RRScheduler::RRScheduler(int cores, int quantum, int delayPerExecution, MemoryManager* memMgr)
+    : cores(cores), quantum(quantum), delayPerExecution(delayPerExecution), scheduler_running(false), memoryManager(memMgr) {}
 
 RRScheduler::~RRScheduler() {
     stop();
@@ -26,30 +26,43 @@ void RRScheduler::scheduleCPU(int coreId) {
 
         if (!process || process->isFinished()) continue; // skip process if null or finished
 
-        if (process && !process->isFinished()) {
-            process->core_id = coreId;
-
-            int quantumUsed = 0;
-            while (quantumUsed < quantum && !process->isFinished()) {
-                // get the amount of executed cinstruction first
-                int prevInstructions = process->executed_commands;
-
-                process->executeCommand(coreId); //execute the process
-
-                if (process->executed_commands > prevInstructions) { //if instruction was executed then increment quantum cycle usage
-                    quantumUsed++;
-                }
-                // Simulate work
-                std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
-            }
-
-            process->core_id = -1;
-
-            // requeue process if it isn't finished
-            if (!process->isFinished()) {
+        // On-demand allocate
+        if (memoryManager && !memoryManager->isAllocated(process->getName())) {
+            if (!memoryManager->allocate(process->getName())) {
+                // No room: push back to tail and retry later
                 std::lock_guard<std::mutex> lock(queue_mutex);
                 readyQueue.push(process);
-                cv.notify_all();
+                cv.notify_one();
+                continue;
+            }
+        }
+        process->core_id = coreId;
+
+        int quantumUsed = 0;
+        while (quantumUsed < quantum && !process->isFinished()) {
+            // get the amount of executed cinstruction first
+            int prevInstructions = process->executed_commands;
+
+            process->executeCommand(coreId); //execute the process
+
+            if (process->executed_commands > prevInstructions) { //if instruction was executed then increment quantum cycle usage
+                quantumUsed++;
+            }
+            // Simulate work
+            std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
+        }
+
+        process->core_id = -1;
+
+        // requeue process if it isn't finished
+        if (!process->isFinished()) {
+            std::lock_guard<std::mutex> lock(queue_mutex);
+            readyQueue.push(process);
+            cv.notify_one();
+        }
+        else {
+            if (memoryManager) {
+                memoryManager->free(process->getName());
             }
         }
     }
@@ -87,14 +100,21 @@ void RRScheduler::stop() {
 void RRScheduler::displayProcesses() const {
     std::lock_guard<std::mutex> lock(queue_mutex);
 
-    std::cout << "Active processes:\n";
+    std::cout << "In-Memory Active processes:\n";
     for (const auto& p : processes) {
-        if (!p->isFinished()) {
+        if (!p->isFinished() && memoryManager->isAllocated(p->getName())) {
             p->displayProcess();
         }
     }
 
-    std::cout << "Completed processes:\n";
+    std::cout << "\nWaiting (deferred due to full memory):\n";
+    for (const auto& p : processes) {
+        if (!p->isFinished() && !memoryManager->isAllocated(p->getName())) {
+            p->displayProcess();
+        }
+    }
+
+    std::cout << "\nCompleted processes:\n";
     for (const auto& p : processes) {
         if (p->isFinished()) {
             p->displayProcess();

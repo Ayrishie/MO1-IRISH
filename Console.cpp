@@ -120,7 +120,13 @@ void Console::initialize() {
             if (key == "scheduler") schedulerType = value;
             else if (key == "num-cpu") cpuCount = std::stoi(value);
             else if (key == "quantum-cycles") timeQuantum = std::stoi(value);
-            else if (key == "batch-process-freq") batchProcessFreq = std::stoi(value);
+            else if (key == "batch-process-freq") {
+                batchProcessFreq = std::stoi(value);
+                if (batchProcessFreq < 1) {
+                    std::cerr << "\033[31mError: batch-process-freq must be at least 1\033[0m\n";
+                    return;
+                }
+            }
             else if (key == "min-ins") minInstructions = std::stoi(value);
             else if (key == "max-ins") maxInstructions = std::stoi(value);
             else if (key == "delay-per-exec") delayPerExecution = std::stoi(value);
@@ -133,6 +139,9 @@ void Console::initialize() {
         if (!memoryCheck(maxOverallMem, memPerFrame, memPerProc)) {
             return;
         }
+
+        // Initialize Memoery Manager
+        memoryManager = std::make_unique<MemoryManager>(maxOverallMem, memPerProc);
 
         // Show config summary
         std::cout << "\033[32m";
@@ -165,10 +174,10 @@ void Console::initialize() {
 
         // Scheduler init
         if (schedulerType == "rr") {
-            rrScheduler = std::make_unique<RRScheduler>(cpuCount, timeQuantum, delayPerExecution);
+            rrScheduler = std::make_unique<RRScheduler>(cpuCount, timeQuantum, delayPerExecution, memoryManager.get());
         }
         else if (schedulerType == "fcfs") {
-            fcfsScheduler = std::make_unique<FCFSScheduler>(cpuCount, delayPerExecution);
+            fcfsScheduler = std::make_unique<FCFSScheduler>(cpuCount, delayPerExecution, memoryManager.get());
         }
         else {
             std::cerr << "Error: unknown scheduler type '" << schedulerType << "' in config.txt\n";
@@ -260,7 +269,7 @@ void Console::schedulerStart() {
                 nameStream << "p" << std::setfill('0') << std::setw(2) << ++pidCounter;
                 std::string name = nameStream.str();
                 int commands = minInstructions + (rand() % (maxInstructions - minInstructions + 1));
-                size_t memory = memPerProc; 
+                size_t memory = memPerProc;
                 auto process = std::make_shared<Process>(name, commands, memory);
                 {
                     std::lock_guard<std::mutex> lock(processesMutex);
@@ -306,7 +315,7 @@ void Console::createProcessFromCommand(const std::string& procName) {
         }
     }
     int commands = minInstructions + (rand() % (maxInstructions - minInstructions + 1));
-    size_t memory = memPerProc; 
+    size_t memory = memPerProc;
     auto process = std::make_shared<Process>(procName, commands, memory);
     {
         std::lock_guard<std::mutex> lock(processesMutex);
