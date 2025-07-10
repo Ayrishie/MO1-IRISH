@@ -104,6 +104,9 @@ void Console::initialize() {
         fs::create_directory(logDir);
     }
 
+    // Create the directory for Snapshots
+    setupSnapshotDirectory();
+
     // If it exists and is a directory, delete .txt files
     if (fs::is_directory(logDir)) {
         for (const auto& entry : fs::directory_iterator(logDir)) {
@@ -259,6 +262,8 @@ void Console::schedulerStart() {
 
     schedulerThread = std::thread([this]() {
         int tick = 0;
+        int quantumCycle = 0;
+
 
         while (schedulerRunning) {
             std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
@@ -280,6 +285,12 @@ void Console::schedulerStart() {
                 }
                 else {
                     fcfsScheduler->addProcess(process);
+                }
+
+                // 2) snapshot every timeQuantum ticks
+                if (timeQuantum > 0 && tick % timeQuantum == 0) {
+                    ++quantumCycle;
+                    dumpMemorySnapshot(quantumCycle);
                 }
 
                 //std::cout << "\033[36m[Tick " << tick << "] Created process: " << name
@@ -734,5 +745,77 @@ void Console::parseInput(string userInput) {
     }
     else if (userInput != "exit") {
         cout << "Unknown command: " << userInput << "\n";
+    }
+}
+
+void Console::dumpMemorySnapshot(int tick) {
+    const std::string fname =
+        "memory_stamps/memory_stamp_" + std::to_string(tick) + ".txt";
+
+    // Destructor closes the file immediately
+    {
+        std::ofstream ofs(fname);
+        if (!ofs) {
+            std::cerr << "ERROR: Could not open \"" << fname << "\" for writing\n";
+            return;
+        }
+
+        // 1) Timestamp
+        ofs << "Timestamp: " << getCurrentTime() << "\n";
+
+        // 2) Processes in memory
+        auto blocks = memoryManager->getBlocksSnapshot();
+        int inMem = std::count_if(blocks.begin(), blocks.end(),
+            [](const MemoryBlock& b) { return b.occupied; });
+        ofs << "Number of processes in memory: " << inMem << "\n";
+
+        // 3) External fragmentation
+        auto fragBytes = memoryManager->getExternalFragmentation();
+        ofs << "Total external fragmentation in KB: " << (fragBytes / 1024) << "\n\n";
+
+        // 4) ----end----
+        ofs << "----end---- = " << memoryManager->getTotalMemory() << "\n\n";
+
+        // 5) Memory layout high→low
+        for (auto it = blocks.rbegin(); it != blocks.rend(); ++it) {
+            if (!it->occupied) continue;
+            int lower = it->start;
+            int upper = it->start + it->size;
+            ofs << upper << "\n"
+                << it->processName << "\n"
+                << lower << "\n\n";
+        }
+
+        // 6) ----start----
+        ofs << "----start---- = 0\n";
+    }  
+}
+
+void Console::setupSnapshotDirectory() {
+
+        // On Windows, raise the CRT file‐handle limit ti  open many snapshots
+#ifdef _WIN32
+    int newLimit = _setmaxstdio(4096);
+    if (newLimit < 4096) {
+        std::cerr << "Warning: _setmaxstdio only raised to "
+                    << newLimit << " handles\n";
+    }
+#endif
+
+    const std::string snapDir = "memory_stamps";
+
+    // If it doesn't exist, create it; if it does, wipe old .txt files
+    if (!fs::exists(snapDir)) {
+        fs::create_directory(snapDir);
+    }
+    else if (fs::is_directory(snapDir)) {
+        for (auto& entry : fs::directory_iterator(snapDir)) {
+            if (entry.path().extension() == ".txt")
+                fs::remove(entry);
+        }
+    }
+    else {
+        std::cerr << "Warning: \"" << snapDir
+            << "\" exists and is not a directory.\n";
     }
 }

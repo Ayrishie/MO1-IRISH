@@ -75,6 +75,8 @@ public:
 
     // NEW
     bool memoryCheck(int maxMem, int frameSize, int procMem);
+    void dumpMemorySnapshot(int tick);
+    void setupSnapshotDirectory();
 };
 
 #endif

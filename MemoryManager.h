@@ -19,12 +19,16 @@ private:
     mutable std::mutex memMutex;
 public:
     MemoryManager(int maxMem, int procMem);
+    ~MemoryManager() = default;
 
     bool allocate(const std::string& processName);
     void free(const std::string& processName);
     void reset();
-    void printMemoryLayout(); // for debug
-    const std::vector<MemoryBlock>& getBlocks() const; // for snapshot/logging
-
     bool isAllocated(const std::string& processName) const;
+
+    std::vector<MemoryBlock> getBlocksSnapshot() const;
+    int getExternalFragmentation() const;
+    const std::vector<MemoryBlock>& getBlocks() const;
+    int getTotalMemory() const;
+
 };

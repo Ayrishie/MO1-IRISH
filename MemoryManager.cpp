@@ -1,6 +1,7 @@
 #include "MemoryManager.h"
 #include <iostream>
 
+
 MemoryManager::MemoryManager(int maxMem, int procMem)
     : totalMemory(maxMem), memPerProc(procMem) {
     memoryBlocks.push_back({ 0, totalMemory, false, "" });
@@ -61,18 +62,6 @@ void MemoryManager::reset() {
     memoryBlocks.push_back({ 0, totalMemory, false, "" });
 }
 
-const std::vector<MemoryBlock>& MemoryManager::getBlocks() const {
-    return memoryBlocks;
-}
-
-void MemoryManager::printMemoryLayout() {
-    std::cout << "==== Memory Layout ====\n";
-    for (const auto& block : memoryBlocks) {
-        std::cout << "[" << block.start << " - " << (block.start + block.size - 1) << "] ";
-        std::cout << (block.occupied ? block.processName : "(free)") << "\n";
-    }
-}
-
 
 bool MemoryManager::isAllocated(const std::string& processName) const {
     std::lock_guard<std::mutex> guard(memMutex);
@@ -82,4 +71,26 @@ bool MemoryManager::isAllocated(const std::string& processName) const {
         }
     }
     return false;
+}
+
+std::vector<MemoryBlock> MemoryManager::getBlocksSnapshot() const {
+    std::lock_guard<std::mutex> guard(memMutex);
+    return memoryBlocks;
+}
+
+int MemoryManager::getExternalFragmentation() const {
+    std::lock_guard<std::mutex> guard(memMutex);
+    int sum = 0;
+    for (auto& b : memoryBlocks)
+        if (!b.occupied) sum += b.size;
+    return sum;
+}
+
+const std::vector<MemoryBlock>& MemoryManager::getBlocks() const {
+    return memoryBlocks;
+}
+
+int MemoryManager::getTotalMemory() const {
+    std::lock_guard<std::mutex> guard(memMutex);
+    return totalMemory;
 }
