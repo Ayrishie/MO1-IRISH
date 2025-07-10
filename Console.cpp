@@ -586,50 +586,152 @@ void Console::displayContinuousUpdates() {
 
 void Console::schedulerTest() {
     if (processes.empty()) {
-        std::cout << "No processes to schedule. Use 'initialize' first.\n";
+        std::cout << "No processes to schedule. Use 'scheduler-start' first.\n";
         return;
     }
 
+    // Clear screen and show test header
+    clear();
+    std::cout << "========================================\n";
+    std::cout << "|        SCHEDULER TEST MODE          |\n";
+    std::cout << "========================================\n";
     std::cout << (schedulerType == "rr"
-        ? "Starting Round Robin scheduler test with " + std::to_string(cpuCount) + " CPUs and time quantum " + std::to_string(timeQuantum)
-        : "Starting FCFS scheduler test with " + std::to_string(cpuCount) + " CPUs") << "\n";
-
-    std::cout << "Press any key to stop the test...\n";
+        ? "Round Robin | CPUs: " + std::to_string(cpuCount) + " | Quantum: " + std::to_string(timeQuantum) + "\n"
+        : "FCFS | CPUs: " + std::to_string(cpuCount) + "\n");
+    std::cout << "----------------------------------------\n";
+    std::cout << "Valid commands:\n";
+    std::cout << "  stop      - Terminate all processes\n";
+    std::cout << "  pause     - Pause execution\n";
+    std::cout << "  continue  - Resume execution\n";
+    std::cout << "  exit-test - Exit test mode\n";
+    std::cout << "----------------------------------------\n\n";
 
     schedulerRunning = true;
+    std::atomic<bool> paused{ false };
+    std::atomic<bool> shouldStop{ false };
+    std::atomic<bool> exitTest{ false };
 
-    std::thread schedulerThread([this]() {
+    // Input handling thread
+    std::thread inputThread([&]() {
+        std::string cmd;
+        while (schedulerRunning && !exitTest) {
+            std::cout << "test> ";
+            std::getline(std::cin, cmd);
+
+            // Convert to lowercase and trim whitespace
+            cmd.erase(remove_if(cmd.begin(), cmd.end(), ::isspace), cmd.end());
+            transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
+
+            if (cmd == "stop") {
+                shouldStop = true;
+                schedulerRunning = false;
+                std::cout << "Terminating all processes...\n";
+            }
+            else if (cmd == "pause") {
+                paused = true;
+                std::cout << "Test paused. Type 'continue' to resume.\n";
+            }
+            else if (cmd == "continue") {
+                paused = false;
+                std::cout << "Resuming test...\n";
+            }
+            else if (cmd == "exit-test") {
+                exitTest = true;
+                std::cout << "Exiting test mode...\n";
+            }
+            else {
+                std::cout << "Invalid command in test mode. Valid commands: stop, pause, continue, exit-test\n";
+            }
+        }
+        });
+
+    // Scheduler thread
+    std::thread schedulerThread([this, &paused, &shouldStop, &exitTest]() {
         if (schedulerType == "rr") {
             rrScheduler->start();
         }
         else {
             fcfsScheduler->start();
         }
+
+        while (schedulerRunning && !exitTest) {
+            if (paused) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            }
+
+            // Check if all processes are finished
+            bool allFinished = true;
+            {
+                std::lock_guard<std::mutex> lock(processesMutex);
+                for (const auto& p : processes) {
+                    if (!p->isFinished()) {
+                        allFinished = false;
+                        break;
+                    }
+                }
+            }
+
+            if (allFinished) {
+                std::cout << "\nAll processes completed.\n";
+                schedulerRunning = false;
+                break;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+
+        // Cleanup
+        if (shouldStop) {
+            // Force terminate all processes
+            std::lock_guard<std::mutex> lock(processesMutex);
+            for (auto& p : processes) {
+                if (!p->isFinished()) {
+                    p->core_id = -1;
+                    p->executed_commands = p->total_commands; // Mark as finished
+                }
+            }
+        }
+
+        if (schedulerType == "rr") {
+            rrScheduler->stop();
+        }
+        else {
+            fcfsScheduler->stop();
+        }
         });
 
-    std::thread displayThread(&Console::displayContinuousUpdates, this);
+    // Display thread
+    std::thread displayThread([this, &paused, &exitTest]() {
+        while (schedulerRunning && !exitTest) {
+            if (paused) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            }
 
-    std::cin.ignore(); // Clear any existing input
-    std::cin.get();    // Wait for any key press
+            system("cls");
+            header();
+            listProcesses();
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+        });
 
-    schedulerRunning = false;
+    // Wait for threads
+    if (schedulerThread.joinable()) schedulerThread.join();
+    if (displayThread.joinable()) displayThread.join();
+    if (inputThread.joinable()) inputThread.join();
 
-    if (schedulerType == "rr") {
-        rrScheduler->stop();
+    // Clear and return to main menu
+    if (exitTest) {
+        clear();
+        header();
     }
     else {
-        fcfsScheduler->stop();
+        std::cout << "\nTest completed. Press any key to continue...\n";
+        std::cin.ignore();
+        clear();
+        header();
     }
-
-    if (schedulerThread.joinable()) {
-        schedulerThread.join();
-    }
-
-    if (displayThread.joinable()) {
-        displayThread.join();
-    }
-
-    std::cout << (schedulerType == "rr" ? "Scheduler test stopped.\n" : "FCFS scheduler test stopped.\n");
 }
 
 void Console::schedulerStop() {
