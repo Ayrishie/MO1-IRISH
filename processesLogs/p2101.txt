@@ -1,0 +1,473 @@
+Process: p2101
+Logs:
+Instructions to execute:
+[0] PRINT("Hello world from p2101!")
+[1] PRINT("Hello world from p2101!")
+[2] SLEEP(9)
+[3] PRINT("Hello world from p2101!")
+[4] SUBTRACT(z, x, y)
+[5] ADD(temp, z, b)
+[6] PRINT("Hello world from p2101!")
+[7] PRINT("Hello world from p2101!")
+[8] FOR([2 instructions], 4)
+[9] FOR([2 instructions], 3)
+[10] SUBTRACT(result, value, 857)
+[11] FOR([1 instructions], 1)
+[12] PRINT("Hello world from p2101!")
+[13] SLEEP(5)
+[14] PRINT("Hello world from p2101!")
+[15] ADD(counter, a, counter)
+[16] SLEEP(6)
+[17] ADD(y, counter, counter)
+[18] ADD(z, a, result)
+[19] ADD(a, temp, x)
+[20] DECLARE(c, 754)
+[21] FOR([1 instructions], 3)
+[22] PRINT("Hello world from p2101!")
+[23] SUBTRACT(b, z, z)
+[24] DECLARE(b, 443)
+[25] ADD(counter, a, value)
+[26] PRINT("Hello world from p2101!")
+[27] ADD(temp, c, 181)
+[28] PRINT("Hello world from p2101!")
+[29] ADD(value, value, b)
+[30] SUBTRACT(b, temp, 447)
+[31] ADD(value, result, 548)
+[32] DECLARE(temp, 264)
+[33] ADD(z, result, y)
+[34] SUBTRACT(value, result, 239)
+[35] SLEEP(3)
+[36] SLEEP(7)
+[37] FOR([2 instructions], 5)
+[38] FOR([3 instructions], 2)
+[39] SLEEP(7)
+[40] FOR([1 instructions], 5)
+[41] ADD(c, 897, b)
+[42] PRINT("Hello world from p2101!")
+[43] PRINT("Hello world from p2101!")
+[44] FOR([2 instructions], 3)
+[45] DECLARE(result, 544)
+[46] SLEEP(1)
+[47] PRINT("Hello world from p2101!")
+[48] PRINT("Hello world from p2101!")
+[49] ADD(c, counter, 464)
+[50] DECLARE(value, 223)
+[51] ADD(y, z, y)
+[52] FOR([2 instructions], 3)
+[53] FOR([2 instructions], 1)
+[54] SUBTRACT(z, value, x)
+[55] DECLARE(x, 473)
+[56] ADD(z, counter, 16)
+[57] PRINT("Hello world from p2101!")
+[58] ADD(x, temp, 119)
+[59] ADD(value, z, 428)
+[60] DECLARE(x, 890)
+[61] FOR([1 instructions], 4)
+[62] DECLARE(c, 528)
+[63] ADD(c, 4, 247)
+[64] ADD(c, z, result)
+[65] SLEEP(2)
+[66] PRINT("Hello world from p2101!")
+[67] ADD(y, b, c)
+[68] SLEEP(10)
+[69] DECLARE(result, 453)
+[70] SLEEP(3)
+[71] ADD(value, result, x)
+[72] FOR([3 instructions], 5)
+[73] SUBTRACT(temp, result, c)
+[74] DECLARE(c, 231)
+[75] PRINT("Hello world from p2101!")
+[76] PRINT("Hello world from p2101!")
+[77] FOR([2 instructions], 2)
+[78] FOR([1 instructions], 4)
+[79] FOR([1 instructions], 3)
+[80] SUBTRACT(a, temp, 566)
+[81] DECLARE(result, 550)
+[82] ADD(result, counter, c)
+[83] SLEEP(6)
+[84] FOR([1 instructions], 5)
+[85] SLEEP(4)
+[86] SLEEP(9)
+[87] PRINT("Hello world from p2101!")
+[88] ADD(z, c, 937)
+[89] ADD(x, temp, x)
+[90] ADD(y, b, 502)
+[91] ADD(counter, result, z)
+[92] ADD(x, x, value)
+[93] FOR([1 instructions], 1)
+[94] SUBTRACT(a, counter, temp)
+[95] ADD(a, result, x)
+[96] SLEEP(7)
+[97] PRINT("Hello world from p2101!")
+[98] SUBTRACT(y, a, 520)
+[99] PRINT("Hello world from p2101!")
+Execution log:
+(07/11/2025 11:40:33 PM) Core:1 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:1 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:1 Executing: SLEEP(9)
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:0 Executing: SUBTRACT(z, x, y)
+(07/11/2025 11:40:33 PM) Core:0 Executing: ADD(temp, z, b)
+(07/11/2025 11:40:33 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 4)
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 4)
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 4)
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 4)
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 4)
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 4)
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 4)
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 4)
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 4)
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:33 PM) Core:1 Executing: SUBTRACT(result, value, 857)
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([1 instructions], 1)
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:1 Executing: FOR([1 instructions], 1)
+(07/11/2025 11:40:33 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:0 Executing: SLEEP(5)
+(07/11/2025 11:40:33 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:0 Executing: ADD(counter, a, counter)
+(07/11/2025 11:40:33 PM) Core:1 Executing: SLEEP(6)
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:33 PM) Core:1 Executing: ADD(y, counter, counter)
+(07/11/2025 11:40:33 PM) Core:1 Executing: ADD(z, a, result)
+(07/11/2025 11:40:33 PM) Core:1 Executing: ADD(a, temp, x)
+(07/11/2025 11:40:33 PM) Core:0 Executing: DECLARE(c, 754)
+(07/11/2025 11:40:33 PM) Core:0 Executing: FOR([1 instructions], 3)
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:0 Executing: FOR([1 instructions], 3)
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:0 Executing: FOR([1 instructions], 3)
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:0 Executing: FOR([1 instructions], 3)
+(07/11/2025 11:40:33 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:33 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:33 PM) Core:0 Executing: SUBTRACT(b, z, z)
+(07/11/2025 11:40:34 PM) Core:0 Executing: DECLARE(b, 443)
+(07/11/2025 11:40:34 PM) Core:0 Executing: ADD(counter, a, value)
+(07/11/2025 11:40:34 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: ADD(temp, c, 181)
+(07/11/2025 11:40:34 PM) Core:1 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:1 Executing: ADD(value, value, b)
+(07/11/2025 11:40:34 PM) Core:1 Executing: SUBTRACT(b, temp, 447)
+(07/11/2025 11:40:34 PM) Core:1 Executing: ADD(value, result, 548)
+(07/11/2025 11:40:34 PM) Core:0 Executing: DECLARE(temp, 264)
+(07/11/2025 11:40:34 PM) Core:0 Executing: ADD(z, result, y)
+(07/11/2025 11:40:34 PM) Core:0 Executing: SUBTRACT(value, result, 239)
+(07/11/2025 11:40:34 PM) Core:0 Executing: SLEEP(3)
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Executing: SLEEP(7)
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([3 instructions], 2)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([3 instructions], 2)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([3 instructions], 2)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([3 instructions], 2)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([3 instructions], 2)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([3 instructions], 2)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([3 instructions], 2)
+(07/11/2025 11:40:34 PM) Core:0 Executing: SLEEP(7)
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([1 instructions], 5)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([1 instructions], 5)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([1 instructions], 5)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([1 instructions], 5)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([1 instructions], 5)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([1 instructions], 5)
+(07/11/2025 11:40:34 PM) Core:0 Executing: ADD(c, 897, b)
+(07/11/2025 11:40:34 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: DECLARE(result, 544)
+(07/11/2025 11:40:34 PM) Core:0 Executing: SLEEP(1)
+(07/11/2025 11:40:34 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:1 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:1 Executing: ADD(c, counter, 464)
+(07/11/2025 11:40:34 PM) Core:1 Executing: DECLARE(value, 223)
+(07/11/2025 11:40:34 PM) Core:1 Executing: ADD(y, z, y)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 3)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 1)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 1)
+(07/11/2025 11:40:34 PM) Core:0 Executing: FOR([2 instructions], 1)
+(07/11/2025 11:40:34 PM) Core:0 Executing: SUBTRACT(z, value, x)
+(07/11/2025 11:40:34 PM) Core:0 Executing: DECLARE(x, 473)
+(07/11/2025 11:40:34 PM) Core:1 Executing: ADD(z, counter, 16)
+(07/11/2025 11:40:34 PM) Core:1 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:1 Executing: ADD(x, temp, 119)
+(07/11/2025 11:40:34 PM) Core:1 Executing: ADD(value, z, 428)
+(07/11/2025 11:40:34 PM) Core:1 Executing: DECLARE(x, 890)
+(07/11/2025 11:40:34 PM) Core:1 Executing: FOR([1 instructions], 4)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:1 Executing: FOR([1 instructions], 4)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:1 Executing: FOR([1 instructions], 4)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:1 Executing: FOR([1 instructions], 4)
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:1 Executing: FOR([1 instructions], 4)
+(07/11/2025 11:40:34 PM) Core:1 Executing: DECLARE(c, 528)
+(07/11/2025 11:40:34 PM) Core:1 Executing: ADD(c, 4, 247)
+(07/11/2025 11:40:34 PM) Core:1 Executing: ADD(c, z, result)
+(07/11/2025 11:40:34 PM) Core:1 Executing: SLEEP(2)
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:34 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:34 PM) Core:1 Executing: ADD(y, b, c)
+(07/11/2025 11:40:34 PM) Core:1 Executing: SLEEP(10)
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Executing: DECLARE(result, 453)
+(07/11/2025 11:40:34 PM) Core:1 Executing: SLEEP(3)
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:34 PM) Core:1 Executing: ADD(value, result, x)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([3 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: SUBTRACT(temp, result, c)
+(07/11/2025 11:40:35 PM) Core:0 Executing: DECLARE(c, 231)
+(07/11/2025 11:40:35 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:35 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:35 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:35 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([2 instructions], 2)
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([2 instructions], 2)
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([2 instructions], 2)
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([2 instructions], 2)
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([2 instructions], 2)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 4)
+    Output: [33m(07/11/2025 11:40:35 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 4)
+    Output: [33m(07/11/2025 11:40:35 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 4)
+    Output: [33m(07/11/2025 11:40:35 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 4)
+    Output: [33m(07/11/2025 11:40:35 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 4)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 3)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 3)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 3)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 3)
+(07/11/2025 11:40:35 PM) Core:0 Executing: SUBTRACT(a, temp, 566)
+(07/11/2025 11:40:35 PM) Core:0 Executing: DECLARE(result, 550)
+(07/11/2025 11:40:35 PM) Core:0 Executing: ADD(result, counter, c)
+(07/11/2025 11:40:35 PM) Core:0 Executing: SLEEP(6)
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: FOR([1 instructions], 5)
+(07/11/2025 11:40:35 PM) Core:0 Executing: SLEEP(4)
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Executing: SLEEP(9)
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:0 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:35 PM)[0m [36mCore:0[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:35 PM) Core:0 Executing: ADD(z, c, 937)
+(07/11/2025 11:40:35 PM) Core:0 Executing: ADD(x, temp, x)
+(07/11/2025 11:40:35 PM) Core:0 Executing: ADD(y, b, 502)
+(07/11/2025 11:40:35 PM) Core:0 Executing: ADD(counter, result, z)
+(07/11/2025 11:40:35 PM) Core:1 Executing: ADD(x, x, value)
+(07/11/2025 11:40:35 PM) Core:1 Executing: FOR([1 instructions], 1)
+(07/11/2025 11:40:35 PM) Core:1 Executing: FOR([1 instructions], 1)
+(07/11/2025 11:40:35 PM) Core:1 Executing: SUBTRACT(a, counter, temp)
+(07/11/2025 11:40:35 PM) Core:1 Executing: ADD(a, result, x)
+(07/11/2025 11:40:35 PM) Core:1 Executing: SLEEP(7)
+(07/11/2025 11:40:35 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:1 Process sleeping...
+(07/11/2025 11:40:35 PM) Core:1 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:35 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m
+(07/11/2025 11:40:35 PM) Core:1 Executing: SUBTRACT(y, a, 520)
+(07/11/2025 11:40:35 PM) Core:1 Executing: PRINT("Hello world from p2101!")
+    Output: [33m(07/11/2025 11:40:35 PM)[0m [36mCore:1[0m [32m"Hello world from p2101!"[0m

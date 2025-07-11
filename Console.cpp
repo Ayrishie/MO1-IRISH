@@ -287,14 +287,15 @@ void Console::schedulerStart() {
                     fcfsScheduler->addProcess(process);
                 }
 
-                // 2) snapshot every timeQuantum ticks
-                if (timeQuantum > 0 && tick % timeQuantum == 0) {
-                    ++quantumCycle;
-                    dumpMemorySnapshot(quantumCycle);
-                }
 
                 //std::cout << "\033[36m[Tick " << tick << "] Created process: " << name
                 //    << " with " << commands << " instructions\n\033[0m";
+            }
+
+            // 2) snapshot every timeQuantum ticks
+            if (timeQuantum > 0 && tick % timeQuantum == 0) {
+                ++quantumCycle;
+                dumpMemorySnapshot(tick);
             }
 
             // Optional: Add per-tick scheduler logic here if needed
