@@ -62,7 +62,7 @@ public:
     void header();
     void menu();
     void start();
-    void createProcessFromCommand(const std::string& procName);
+    void createProcessFromCommand(const std::string& procName, int procMem);
     void attachToProcessScreen(const std::string& procName);
     void initialize();
     void clear();
@@ -75,8 +75,7 @@ public:
 
     // NEW
     bool memoryCheck(int maxMem, int frameSize, int procMem);
-    void dumpMemorySnapshot(int tick);
-    void setupSnapshotDirectory();
+    bool isValidProcessMemory(int procMem);
 };
 
 #endif

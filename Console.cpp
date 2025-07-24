@@ -2,6 +2,7 @@
 #include <cstdlib>
 
 #include "Console.h"
+#include <sstream> 
 #include <iostream>
 #include <filesystem> 
 using namespace std;
@@ -43,12 +44,15 @@ void Console::menu()
 {
     cout << "Available commands:" << endl;
     cout << "  initialize     - Initialize system" << endl;
+    cout << "  screen -c <name> <memory> \"<instructions>\" - Create a new process with custom instructions" << endl;
     cout << "  screen -r <name> - Display screen for a process" << endl;
-    cout << "  screen -s <name> - Create a new screen for a process" << endl;
+    cout << "  screen -s <name> <process_memory_size> - Create a new screen for a process" << endl;
     cout << "  screen -ls       - List system utilization and processes" << endl;
     cout << "  scheduler-start - Start scheduler" << endl;
     cout << "  scheduler-stop - Stop scheduler" << endl;
     cout << "  report-util    - Report system utilization" << endl;
+    cout << "  process-smi       - Show summarized memory and CPU usage" << endl;
+    cout << "  vmstat            - Show detailed virtual memory stats" << endl;
     cout << "  clear          - Clear screen" << endl;
     cout << "  exit           - Exit application\n\n" << endl;
 }
@@ -71,13 +75,6 @@ void Console::initialize() {
         std::cerr << "Error: Cannot re-initialize system while scheduler is running.\n";
         std::cerr << "Stop the scheduler first using 'scheduler-stop'.\n";
         std::cerr << "\033[0m";
-        return;
-    }
-
-    if (isInitialized) {
-        std::cout << "\033[33m";
-        std::cout << "System was already initialized then Run. Please Restart the program.\n";
-        std::cout << "\033[0m";
         return;
     }
 
@@ -105,7 +102,7 @@ void Console::initialize() {
     }
 
     // Create the directory for Snapshots
-    setupSnapshotDirectory();
+    //setupSnapshotDirectory();
 
     // If it exists and is a directory, delete .txt files
     if (fs::is_directory(logDir)) {
@@ -224,19 +221,20 @@ void Console::schedulerStart() {
     clear();
 
     if (!fcfsScheduler && !rrScheduler) {
-        std::cerr << "Error: Scheduler not initialized. Please run initialize first.\n";
+        std::cerr << "\033[31mError: Scheduler not initialized. Please run initialize first.\033[0m\n";
         return;
     }
 
     if (schedulerRunning) {
-        std::cout << "Scheduler is already running!\n";
+        std::cout << "\033[33mWarning: Scheduler is already running!\033[0m\n";
         return;
     }
 
     if (schedulerThread.joinable()) {
-        std::cout << "Scheduler thread is already running!\n";
+        std::cout << "\033[33mWarning: Scheduler thread is already running!\033[0m\n";
         return;
     }
+
 
     schedulerRunning = true;
 
@@ -295,7 +293,6 @@ void Console::schedulerStart() {
             // 2) snapshot every timeQuantum ticks
             if (timeQuantum > 0 && tick % timeQuantum == 0) {
                 ++quantumCycle;
-                dumpMemorySnapshot(tick);
             }
 
             // Optional: Add per-tick scheduler logic here if needed
@@ -306,14 +303,19 @@ void Console::schedulerStart() {
     std::cout << "\033[36mScheduler started successfully.\n\n\033[0m";
 }
 
-void Console::createProcessFromCommand(const std::string& procName) {
+void Console::createProcessFromCommand(const std::string& procName, int procMem) {
     if (procName.empty()) {
-        std::cout << "Error: Process name required.\n";
+        std::cout << "\033[33mWarning: Process name required.\033[0m\n";
+        return;
+    }
+
+    if (!isValidProcessMemory(procMem)) {
+        std::cerr << "\033[31mError: Invalid memory allocation for process.\033[0m\n";
         return;
     }
 
     if (!fcfsScheduler && !rrScheduler) {
-        std::cerr << "Error: Scheduler not initialized. Please run initialize first.\n";
+        std::cerr << "\033[31mError: Scheduler not initialized. Please run initialize first.\033[0m\n";
         return;
     }
 
@@ -321,13 +323,13 @@ void Console::createProcessFromCommand(const std::string& procName) {
         std::lock_guard<std::mutex> lock(processesMutex);
         for (const auto& p : processes) {
             if (p->getName() == procName) {
-                std::cout << "Process \"" << procName << "\" already exists.\n";
+                std::cout << "\033[33mWarning: Process \"" << procName << "\" already exists.\033[0m\n";
                 return;
             }
         }
     }
     int commands = minInstructions + (rand() % (maxInstructions - minInstructions + 1));
-    size_t memory = memPerProc;
+    size_t memory = procMem;
     auto process = std::make_shared<Process>(procName, commands, memory);
     {
         std::lock_guard<std::mutex> lock(processesMutex);
@@ -343,7 +345,8 @@ void Console::createProcessFromCommand(const std::string& procName) {
         }
 
         pidCounter++;
-        std::cout << "\033[32mCreated process \"" << procName << "\" with " << commands << " instructions.\033[0m\n";
+        std::cout << "\033[32mCreated process \"" << procName << "\" with " << commands
+            << " instructions and " << memory << " bytes of memory.\033[0m\n";
     }
 }
 
@@ -359,9 +362,8 @@ void Console::attachToProcessScreen(const std::string& procName) {
             }
         }
     }
-
     if (!found) {
-        std::cerr << "Error: Process \"" << procName << "\" not found.\n";
+        std::cerr << "\033[31mError: Process \"" << procName << "\" not found.\033[0m\n";
         return;
     }
 
@@ -395,7 +397,7 @@ void Console::showProcessScreen(const std::string& procName) {
         }
     }
     if (!procPtr) {
-        std::cout << "Process not found: " << procName << "\n";
+        std::cout << "\033[31mProcess not found: " << procName << "\033[0m\n";
         return;
     }
 
@@ -410,7 +412,8 @@ void Console::showProcessScreen(const std::string& procName) {
     while (true) {
         // A) Header
         std::cout << "Process name: " << procPtr->name << "\n";
-        std::cout << "ID:           " << procPtr->process_id << "\n\n";
+        std::cout << "ID:           " << procPtr->process_id << "\n";
+        std::cout << "Memory:       " << procPtr->memory << " bytes\n";
 
         // B) Logs
         std::cout << "Logs:\n";
@@ -626,23 +629,25 @@ void Console::schedulerTest() {
             if (cmd == "stop") {
                 shouldStop = true;
                 schedulerRunning = false;
-                std::cout << "Terminating all processes...\n";
+                std::cout << "\033[31mTerminating all processes...\033[0m\n";
             }
             else if (cmd == "pause") {
                 paused = true;
-                std::cout << "Test paused. Type 'continue' to resume.\n";
+                std::cout << "\033[33mTest paused. Type 'continue' to resume.\033[0m\n";
             }
             else if (cmd == "continue") {
                 paused = false;
-                std::cout << "Resuming test...\n";
+                std::cout << "\033[32mResuming test...\033[0m\n";
             }
             else if (cmd == "exit-test") {
                 exitTest = true;
-                std::cout << "Exiting test mode...\n";
+                std::cout << "\033[36mExiting test mode...\033[0m\n";
             }
             else {
-                std::cout << "Invalid command in test mode. Valid commands: stop, pause, continue, exit-test\n";
+                std::cout << "\033[31mInvalid command in test mode.\033[0m Valid commands: "
+                    << "\033[36mstop, pause, continue, exit-test\033[0m\n";
             }
+
         }
         });
 
@@ -807,118 +812,80 @@ void Console::clear() {
 
 
 
-void Console::parseInput(string userInput) {
-    transform(userInput.begin(), userInput.end(), userInput.begin(), ::tolower);
+void Console::parseInput(std::string userInput) {
+    std::transform(userInput.begin(), userInput.end(), userInput.begin(), ::tolower);
 
+    std::istringstream iss(userInput);
+    std::vector<std::string> args;
+    std::string token;
 
-    if (userInput == "exit") {
-        // immediate, no-destructors termination:
+    while (iss >> token) {
+        args.push_back(token);
+    }
+
+    if (args.empty()) return;
+
+    if (args[0] == "exit") {
         std::_Exit(EXIT_SUCCESS);
     }
-
-    if (userInput == "initialize") {
+    else if (args[0] == "initialize") {
         initialize();
     }
-    else if (userInput == "screen -ls") {
+    else if (args[0] == "screen" && args.size() == 2 && args[1] == "-ls") {
         screen();
     }
-    else if (userInput == "scheduler-start") {
+    else if (args[0] == "scheduler-start") {
         schedulerStart();
     }
-    // NEW: attach to a process’s “screen”
-    else if (userInput.rfind("screen -s ", 0) == 0) {
-        auto procName = userInput.substr(userInput.find_last_of(' ') + 1);
-        createProcessFromCommand(procName);
-    }
-    else if (userInput.rfind("screen -r ", 0) == 0) {
-        auto procName = userInput.substr(userInput.find_last_of(' ') + 1);
-        attachToProcessScreen(procName);
-    }
-    else if (userInput == "scheduler-test") {
+    else if (args[0] == "scheduler-test") {
         schedulerTest();
     }
-    else if (userInput == "scheduler-stop") {
+    else if (args[0] == "scheduler-stop") {
         schedulerStop();
     }
-    else if (userInput == "report-util") {
+    else if (args[0] == "report-util") {
         reportUtil();
     }
-    else if (userInput == "clear") {
+    else if (args[0] == "clear") {
         clear();
     }
-    else if (userInput != "exit") {
-        cout << "Unknown command: " << userInput << "\n";
-    }
-}
-
-void Console::dumpMemorySnapshot(int tick) {
-    const std::string fname =
-        "memory_stamps/memory_stamp_" + std::to_string(tick) + ".txt";
-
-    // Destructor closes the file immediately
-    {
-        std::ofstream ofs(fname);
-        if (!ofs) {
-            std::cerr << "ERROR: Could not open \"" << fname << "\" for writing\n";
-            return;
+    // NEW: screen -s <process_name> <process_memory_size>
+    else if (args[0] == "screen" && args.size() == 4 && args[1] == "-s") {
+        std::string procName = args[2];
+        try {
+            int procMem = std::stoi(args[3]);
+            createProcessFromCommand(procName, procMem);
         }
-
-        // 1) Timestamp
-        ofs << "Timestamp: " << getCurrentTime() << "\n";
-
-        // 2) Processes in memory
-        auto blocks = memoryManager->getBlocksSnapshot();
-        int inMem = std::count_if(blocks.begin(), blocks.end(),
-            [](const MemoryBlock& b) { return b.occupied; });
-        ofs << "Number of processes in memory: " << inMem << "\n";
-
-        // 3) External fragmentation
-        auto fragBytes = memoryManager->getExternalFragmentation();
-        ofs << "Total external fragmentation in KB: " << (fragBytes / 1024) << "\n\n";
-
-        // 4) ----end----
-        ofs << "----end---- = " << memoryManager->getTotalMemory() << "\n\n";
-
-        // 5) Memory layout high→low
-        for (auto it = blocks.rbegin(); it != blocks.rend(); ++it) {
-            if (!it->occupied) continue;
-            int lower = it->start;
-            int upper = it->start + it->size;
-            ofs << upper << "\n"
-                << it->processName << "\n"
-                << lower << "\n\n";
+        catch (...) {
+            std::cerr << "Error: Memory size must be a valid integer.\n";
         }
-
-        // 6) ----start----
-        ofs << "----start---- = 0\n";
-    }  
-}
-
-void Console::setupSnapshotDirectory() {
-
-        // On Windows, raise the CRT file‐handle limit ti  open many snapshots
-#ifdef _WIN32
-    int newLimit = _setmaxstdio(4096);
-    if (newLimit < 4096) {
-        std::cerr << "Warning: _setmaxstdio only raised to "
-                    << newLimit << " handles\n";
     }
-#endif
-
-    const std::string snapDir = "memory_stamps";
-
-    // If it doesn't exist, create it; if it does, wipe old .txt files
-    if (!fs::exists(snapDir)) {
-        fs::create_directory(snapDir);
-    }
-    else if (fs::is_directory(snapDir)) {
-        for (auto& entry : fs::directory_iterator(snapDir)) {
-            if (entry.path().extension() == ".txt")
-                fs::remove(entry);
-        }
+    // screen -r <process_name>
+    else if (args[0] == "screen" && args.size() == 3 && args[1] == "-r") {
+        std::string procName = args[2];
+        attachToProcessScreen(procName);
     }
     else {
-        std::cerr << "Warning: \"" << snapDir
-            << "\" exists and is not a directory.\n";
+        std::cout << "Unknown command: " << userInput << "\n";
     }
+}
+
+// New
+
+bool Console::isValidProcessMemory(int procMem) {
+    auto isPowerOfTwo = [](int x) {
+        return x > 0 && (x & (x - 1)) == 0;
+        };
+
+    if (!isPowerOfTwo(procMem)) {
+        std::cerr << "\033[31mInvalid memory allocation: Not a power of 2\033[0m\n";
+        return false;
+    }
+
+    if (procMem < 64 || procMem > 65536) {
+        std::cerr << "\033[31mInvalid memory allocation: Must be in range [64, 65536]\033[0m\n";
+        return false;
+    }
+
+    return true;
 }

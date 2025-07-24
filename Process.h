@@ -98,6 +98,7 @@ public:
         outputBuffer.clear();
     }
 
+
 };
 
 #endif // PROCESS_H

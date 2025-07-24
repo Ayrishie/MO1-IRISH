@@ -111,7 +111,7 @@ void Process::displayProcess(std::ostream& out) const {
         << std::setw(25) << ("(" + getFormattedTime() + ")")
         << std::setw(15) << status
         << std::setw(15) << (std::to_string(exec) + "/" + std::to_string(total))
-        << std::setw(10) << ("[" + std::to_string(memory) + " KB]")
+        << std::setw(10) << ("[" + std::to_string(memory) + " B]")
         << coreInfo
         << "\n";
 }
@@ -224,6 +224,7 @@ void Process::setInstructions(const std::vector<std::shared_ptr<Instruction>>& i
 void Process::displayProcessInfo() const {
     cout << "Process: " << name << endl;
     cout << "ID: " << process_id << endl;
+    cout << "Memory: " << memory << " bytes" << endl;
     cout << "Current instruction line: " << current_instruction << endl;
     cout << "Lines of code: " << total_commands << endl;
 
@@ -241,4 +242,3 @@ void Process::displayProcessInfo() const {
     }
     cout << endl;
 }
-
