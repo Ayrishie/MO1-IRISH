@@ -74,6 +74,7 @@ Process::Process(const std::string& pname, const std::vector<std::shared_ptr<Ins
     }
 }
 
+
 Process::~Process() {
     if (log_file && log_file->is_open()) {
         log_file->close();

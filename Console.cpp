@@ -304,30 +304,10 @@ void Console::schedulerStart() {
 }
 
 void Console::createProcessFromCommand(const std::string& procName, int procMem) {
-    if (procName.empty()) {
-        std::cout << "\033[33mWarning: Process name required.\033[0m\n";
+    if (!validateProcessCreation(procName, procMem)) {
         return;
     }
 
-    if (!isValidProcessMemory(procMem)) {
-        std::cerr << "\033[31mError: Invalid memory allocation for process.\033[0m\n";
-        return;
-    }
-
-    if (!fcfsScheduler && !rrScheduler) {
-        std::cerr << "\033[31mError: Scheduler not initialized. Please run initialize first.\033[0m\n";
-        return;
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(processesMutex);
-        for (const auto& p : processes) {
-            if (p->getName() == procName) {
-                std::cout << "\033[33mWarning: Process \"" << procName << "\" already exists.\033[0m\n";
-                return;
-            }
-        }
-    }
     int commands = minInstructions + (rand() % (maxInstructions - minInstructions + 1));
     size_t memory = procMem;
     auto process = std::make_shared<Process>(procName, commands, memory);
@@ -813,9 +793,13 @@ void Console::clear() {
 
 
 void Console::parseInput(std::string userInput) {
-    std::transform(userInput.begin(), userInput.end(), userInput.begin(), ::tolower);
+    std::string originalInput = userInput;
+    
 
-    std::istringstream iss(userInput);
+    std::string loweredInput = userInput;
+    std::transform(loweredInput.begin(), loweredInput.end(), loweredInput.begin(), ::tolower);
+
+    std::istringstream iss(loweredInput);
     std::vector<std::string> args;
     std::string token;
 
@@ -865,6 +849,29 @@ void Console::parseInput(std::string userInput) {
         std::string procName = args[2];
         attachToProcessScreen(procName);
     }
+    else if (args[0] == "screen" && args.size() >= 5 && args[1] == "-c") {
+        std::string procName = args[2];
+
+        int memSize;
+        try {
+            memSize = std::stoi(args[3]);
+        }
+        catch (...) {
+            std::cerr << "\033[31mError: Memory size must be a valid integer.\033[0m\n";
+            return;
+        }
+
+        size_t firstQuote = originalInput.find('"');
+        size_t lastQuote = originalInput.rfind('"');
+        if (firstQuote == std::string::npos || lastQuote == std::string::npos || lastQuote <= firstQuote) {
+            std::cerr << "\033[31mError: Instruction string must be wrapped in double quotes.\033[0m\n";
+            return;
+        }
+
+        std::string instructionStr = originalInput.substr(firstQuote + 1, lastQuote - firstQuote - 1);
+
+        createProcessWithInstructions(procName, memSize, instructionStr);
+    }
     else {
         std::cout << "Unknown command: " << userInput << "\n";
     }
@@ -888,4 +895,201 @@ bool Console::isValidProcessMemory(int procMem) {
     }
 
     return true;
+}
+
+bool Console::validateProcessCreation(const std::string& procName, int procMem) {
+    clear();
+    if (procName.empty()) {
+        std::cout << "\033[33mWarning: Process name required.\033[0m\n";
+        return false;
+    }
+
+    if (!isValidProcessMemory(procMem)) {
+        return false;
+    }
+
+    if (!fcfsScheduler && !rrScheduler) {
+        std::cerr << "\033[31mError: Scheduler not initialized. Please run initialize first.\033[0m\n";
+        return false;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(processesMutex);
+        for (const auto& p : processes) {
+            if (p->getName() == procName) {
+                std::cout << "\033[33mWarning: Process \"" << procName << "\" already exists.\033[0m\n";
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+void Console::createProcessWithInstructions(const std::string& procName, int procMem, const std::string& instructionStr) {
+    // Validate process creation
+    if (!validateProcessCreation(procName, procMem)) {
+        return;
+    }
+
+    std::cout << "[INFO] Creating process: " << procName << "\n";
+    std::cout << "[INFO] Memory size: " << procMem << " bytes\n";
+    std::cout << "[INFO] Raw instruction input: " << instructionStr << "\n";
+
+    std::vector<std::shared_ptr<Instruction>> parsedInstructions;
+
+    // Step 1: Split raw input into instruction lines (handle quoted PRINTs)
+    std::vector<std::string> instructionLines;
+    std::string current;
+    bool insideQuote = false;
+
+    for (char ch : instructionStr) {
+        if (ch == '"') insideQuote = !insideQuote;
+        if (ch == ';' && !insideQuote) {
+            if (!current.empty()) {
+                instructionLines.push_back(current);
+                current.clear();
+            }
+        }
+        else {
+            current += ch;
+        }
+    }
+
+    if (!current.empty()) instructionLines.push_back(current);
+
+    std::cout << "[INFO] Parsed instructions:\n";
+
+    for (auto& line : instructionLines) {
+        // Trim leading/trailing whitespace
+        line.erase(0, line.find_first_not_of(" \t\r\n"));
+        line.erase(line.find_last_not_of(" \t\r\n") + 1);
+        if (line.empty()) continue;
+
+        std::cout << " - " << line << "\n";
+
+        std::stringstream ss(line);
+
+        std::string keyword;
+        size_t keywordEnd = 0;
+        while (keywordEnd < line.length() && std::isalnum(line[keywordEnd])) {
+            keywordEnd++;
+        }
+        keyword = line.substr(0, keywordEnd);
+
+        // Lowercase keyword
+        std::transform(keyword.begin(), keyword.end(), keyword.begin(), [](unsigned char c) {
+            return std::tolower(c);
+            });
+
+        if (keyword == "declare") {
+            std::string var;
+            int value;
+            ss >> var >> value;
+            parsedInstructions.push_back(std::make_shared<DeclareInstruction>(var, value));
+        }
+        else if (keyword == "add") {
+            std::string target, op1, op2;
+            ss >> target >> op1 >> op2;
+            parsedInstructions.push_back(std::make_shared<AddInstruction>(target, op1, op2));
+        }
+        else if (keyword == "subtract") {
+            std::string target, op1, op2;
+            ss >> target >> op1 >> op2;
+            parsedInstructions.push_back(std::make_shared<SubtractInstruction>(target, op1, op2));
+        }
+        //else if (keyword == "write") {
+        //    std::string addrStr, var;
+        //    ss >> addrStr >> var;
+        //    try {
+        //        int addr = std::stoi(addrStr, nullptr, 16);
+        //        parsedInstructions.push_back(std::make_shared<WriteInstruction>(addr, var));
+        //    }
+        //    catch (...) {
+        //        std::cerr << "[ERROR] Invalid WRITE address format: " << addrStr << "\n";
+        //    }
+        //}
+        //else if (keyword == "read") {
+        //    std::string var, addrStr;
+        //    ss >> var >> addrStr;
+        //    try {
+        //        int addr = std::stoi(addrStr, nullptr, 16);
+        //        parsedInstructions.push_back(std::make_shared<ReadInstruction>(var, addr));
+        //    }
+        //    catch (...) {
+        //        std::cerr << "[ERROR] Invalid READ address format: " << addrStr << "\n";
+        //    }
+        //}
+        else if (keyword == "print") {
+            handlePrintInstruction(line, parsedInstructions);
+        }
+        else {
+            std::cerr << "[WARNING] Unknown instruction: " << keyword << "\n";
+        }
+    }
+
+    if (parsedInstructions.empty()) {
+        std::cerr << "[ERROR] No valid instructions found. Process not created.\n";
+        return;
+    }
+
+    // Step 2: Create and queue process
+    auto process = std::make_shared<Process>(procName, parsedInstructions, procMem);
+
+    {
+        std::lock_guard<std::mutex> lock(processesMutex);
+        processes.push_back(process);
+    }
+
+
+    if (schedulerType == "rr") {
+        rrScheduler->enqueueProcess(process);
+    }
+    else {
+        fcfsScheduler->addProcess(process);
+    }
+
+    std::cout << "[SUCCESS] Process " << procName << " created with " << parsedInstructions.size()
+        << " instruction(s) and queued.\n";
+}
+
+
+void Console::handlePrintInstruction(const std::string& line, std::vector<std::shared_ptr<Instruction>>& parsedInstructions) {
+    std::string message_content = "";
+    std::string variable_name = "";
+    bool has_var = false;
+
+    size_t open_paren = line.find('(');
+    size_t close_paren = line.rfind(')');
+
+    if (open_paren != std::string::npos && close_paren != std::string::npos && close_paren > open_paren) {
+        std::string args_content = line.substr(open_paren + 1, close_paren - open_paren - 1);
+
+        size_t start_quote = args_content.find('\"');
+        if (start_quote != std::string::npos) {
+            size_t end_quote = args_content.find('\"', start_quote + 1);
+            if (end_quote != std::string::npos) {
+                message_content = args_content.substr(start_quote + 1, end_quote - start_quote - 1);
+
+                size_t plus_position = args_content.find('+', end_quote);
+                if (plus_position != std::string::npos) {
+                    has_var = true;
+                    variable_name = args_content.substr(plus_position + 1);
+
+                    // Clean leading/trailing whitespace
+                    variable_name.erase(0, variable_name.find_first_not_of(" \t"));
+                    variable_name.erase(variable_name.find_last_not_of(" \t") + 1);
+
+                    if (variable_name.empty()) {
+                        has_var = false;
+                    }
+                }
+            }
+        }
+    }
+
+    if (has_var && !variable_name.empty())
+        parsedInstructions.push_back(std::make_shared<PrintInstruction>(message_content, variable_name));
+    else
+        parsedInstructions.push_back(std::make_shared<PrintInstruction>(message_content));
 }

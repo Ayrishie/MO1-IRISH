@@ -76,6 +76,9 @@ public:
     // NEW
     bool memoryCheck(int maxMem, int frameSize, int procMem);
     bool isValidProcessMemory(int procMem);
+    bool validateProcessCreation(const std::string& procName, int procMem);
+    void createProcessWithInstructions(const std::string& procName, int procMem, const std::string& rawInstructionString);
+    void handlePrintInstruction(const std::string& line, std::vector<std::shared_ptr<Instruction>>& parsedInstructions);
 };
 
 #endif

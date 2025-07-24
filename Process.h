@@ -47,6 +47,7 @@ public:
     Process(const std::string& pname,
         const std::vector<std::shared_ptr<Instruction>>& instrs,
         size_t memory);
+
     ~Process();
 
     Process(const Process&) = delete;
