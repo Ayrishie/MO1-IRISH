@@ -928,13 +928,17 @@ bool Console::validateProcessCreation(const std::string& procName, int procMem) 
 
 void Console::createProcessWithInstructions(const std::string& procName, int procMem, const std::string& instructionStr) {
     // Validate process creation
+
+    bool hasInvalidInstruction = false;
+
     if (!validateProcessCreation(procName, procMem)) {
         return;
     }
 
-    std::cout << "[INFO] Creating process: " << procName << "\n";
-    std::cout << "[INFO] Memory size: " << procMem << " bytes\n";
-    std::cout << "[INFO] Raw instruction input: " << instructionStr << "\n";
+    std::cout << "\033[36m[INFO] Creating process: " << procName << "\033[0m\n";
+    std::cout << "\033[36m[INFO] Memory size: " << procMem << " bytes\033[0m\n";
+    std::cout << "\033[36m[INFO] Raw instruction input: " << instructionStr << "\033[0m\n";
+
 
     std::vector<std::shared_ptr<Instruction>> parsedInstructions;
 
@@ -958,7 +962,7 @@ void Console::createProcessWithInstructions(const std::string& procName, int pro
 
     if (!current.empty()) instructionLines.push_back(current);
 
-    std::cout << "[INFO] Parsed instructions:\n";
+    std::cout << "\033[36m[INFO] Parsed instructions:\033[0m\n";
 
     for (auto& line : instructionLines) {
         // Trim leading/trailing whitespace
@@ -998,38 +1002,53 @@ void Console::createProcessWithInstructions(const std::string& procName, int pro
             ss >> target >> op1 >> op2;
             parsedInstructions.push_back(std::make_shared<SubtractInstruction>(target, op1, op2));
         }
-        //else if (keyword == "write") {
-        //    std::string addrStr, var;
-        //    ss >> addrStr >> var;
-        //    try {
-        //        int addr = std::stoi(addrStr, nullptr, 16);
-        //        parsedInstructions.push_back(std::make_shared<WriteInstruction>(addr, var));
-        //    }
-        //    catch (...) {
-        //        std::cerr << "[ERROR] Invalid WRITE address format: " << addrStr << "\n";
-        //    }
-        //}
-        //else if (keyword == "read") {
-        //    std::string var, addrStr;
-        //    ss >> var >> addrStr;
-        //    try {
-        //        int addr = std::stoi(addrStr, nullptr, 16);
-        //        parsedInstructions.push_back(std::make_shared<ReadInstruction>(var, addr));
-        //    }
-        //    catch (...) {
-        //        std::cerr << "[ERROR] Invalid READ address format: " << addrStr << "\n";
-        //    }
-        //}
+        else if (keyword == "write") {
+            std::stringstream ss(line);
+            std::string discard;
+            ss >> discard;  
+
+            std::string addrStr, var;
+            ss >> addrStr >> var;
+            try {
+                uint16_t addr = static_cast<uint16_t>(std::stoi(addrStr, nullptr, 16));
+                parsedInstructions.push_back(std::make_shared<WriteInstruction>(addr, var));
+            }
+            catch (...) {
+                std::cerr << "\033[31m[ERROR] Invalid READ address format: " << addrStr << "\033[0m\n";
+            }
+        }
+        else if (keyword == "read") {
+            std::stringstream ss(line);
+            std::string discard;
+            ss >> discard;  // skip keyword "read"
+
+            std::string var, addrStr;
+            ss >> var >> addrStr;
+            try {
+                uint16_t addr = static_cast<uint16_t>(std::stoi(addrStr, nullptr, 16));
+                parsedInstructions.push_back(std::make_shared<ReadInstruction>(var, addr));
+            }
+            catch (...) {
+                std::cerr << "\033[31m[ERROR] Invalid READ address format: " << addrStr << "\033[0m\n";
+            }
+        }
+
         else if (keyword == "print") {
             handlePrintInstruction(line, parsedInstructions);
         }
         else {
-            std::cerr << "[WARNING] Unknown instruction: " << keyword << "\n";
+            std::cerr << "\033[33m[WARNING] Unknown instruction: " << keyword << "\033[0m\n"; 
+            hasInvalidInstruction = true;  // <- flagging failure
         }
     }
 
-    if (parsedInstructions.empty()) {
-        std::cerr << "[ERROR] No valid instructions found. Process not created.\n";
+    if (hasInvalidInstruction || parsedInstructions.empty()) {
+        std::cerr << "\033[31m[ERROR] Process not created due to invalid instruction(s).\033[0m\n";
+        return;
+    }
+
+    if (parsedInstructions.size() < 1 || parsedInstructions.size() > 50) {
+        std::cerr << "\033[31m[ERROR] Invalid instruction count: must be between 1 and 50.\033[0m\n";
         return;
     }
 
@@ -1049,8 +1068,8 @@ void Console::createProcessWithInstructions(const std::string& procName, int pro
         fcfsScheduler->addProcess(process);
     }
 
-    std::cout << "[SUCCESS] Process " << procName << " created with " << parsedInstructions.size()
-        << " instruction(s) and queued.\n";
+    std::cout << "\033[32m[SUCCESS] Process " << procName << " created with "
+        << parsedInstructions.size() << " instruction(s) and queued.\033[0m\n";
 }
 
 

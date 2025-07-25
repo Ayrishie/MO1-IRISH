@@ -28,6 +28,8 @@ private:
     int currentCycle;
     int sleepCycles;
     std::vector<std::string> outputBuffer;  // To store PRINT outputs
+    // NEW
+    std::unordered_map<uint16_t, uint16_t> memory;  // Simulated memory
 
 public:
     ProcessContext(const std::string& name) : processName(name), currentCycle(0), sleepCycles(0) {}
@@ -56,6 +58,16 @@ public:
     const std::string& getProcessName() const { return processName; }
     int getCurrentCycle() const { return currentCycle; }
     void incrementCycle() { currentCycle++; }
+
+    // Simulated memory access
+    void writeMemory(uint16_t address, uint16_t value) {
+        memory[address] = value;
+    }
+
+    uint16_t readMemory(uint16_t address) const {
+        auto it = memory.find(address);
+        return (it != memory.end()) ? it->second : 0;
+    }
 };
 
 // PRINT instruction
@@ -267,6 +279,53 @@ public:
 
     std::string toString() const override {
         return "FOR([" + std::to_string(instructions.size()) + " instructions], " + std::to_string(repeats) + ")";
+    }
+};
+
+class WriteInstruction : public Instruction {
+private:
+    uint16_t address;
+    std::string variable;
+
+public:
+    WriteInstruction(uint16_t addr, const std::string& var)
+        : address(addr), variable(var) {
+    }
+
+    bool execute(ProcessContext& context) override {
+        uint16_t value = context.getVariable(variable);
+        context.writeMemory(address, value);
+        return true;
+    }
+
+    std::string toString() const override {
+        std::stringstream ss;
+        ss << "WRITE(0x" << std::hex << address << ", " << variable << ")";
+        return ss.str();
+    }
+};
+
+
+class ReadInstruction : public Instruction {
+private:
+    std::string variable;
+    uint16_t address;
+
+public:
+    ReadInstruction(const std::string& var, uint16_t addr)
+        : variable(var), address(addr) {
+    }
+
+    bool execute(ProcessContext& context) override {
+        uint16_t value = context.readMemory(address);
+        context.setVariable(variable, value);
+        return true;
+    }
+
+    std::string toString() const override {
+        std::stringstream ss;
+        ss << "READ(" << variable << ", 0x" << std::hex << address << ")";
+        return ss.str();
     }
 };
 
