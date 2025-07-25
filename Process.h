@@ -12,6 +12,14 @@
 #include <vector>
 #include "Instruction.h"
 
+// Page Data Structure
+// Virtual Addressing Scheme
+typedef struct Page {
+    size_t page_number;   // process page number
+    size_t frame_number;  // actual physical memory frame number
+    bool inMemory;     // Flag to track if Page is loaded into RAM
+    bool swapped;      // Flag to detect if Page has been swapped with the backing store
+} Page;
 
 class Process {
 private:
@@ -37,16 +45,22 @@ private:
 public:
     std::string name;
     int total_commands;
-    std::atomic<int> executed_commands;
+    std::atomic<int> executed_commands; // Functions as the Program Counter (conjunction with `instruction_pointer` and `pageTable`)
     std::chrono::time_point<std::chrono::system_clock> start_time;
     std::atomic<int> core_id;
     int process_id;
-    size_t memory;
+    size_t processMemory; // renamed from "memory"
+
+    // NEW ATTRIBUTES
+    std::vector<Page> pageTable; // per-process page list
+    size_t pageSize;             // Size of each page in memory: `mem-per-frame` config variable
+    size_t numPages;             // Number of pages: `max-overall-mem` / `mem-per-frame` config variables
 
     Process(const std::string& pname, int commands, size_t memory);
     Process(const std::string& pname,
         const std::vector<std::shared_ptr<Instruction>>& instrs,
-        size_t memory);
+        size_t processMemory,
+        size_t memoryPerFrame);
     ~Process();
 
     Process(const Process&) = delete;
@@ -75,8 +89,6 @@ public:
         return current_instruction;
     }
 
-
-
     // Methods for screen command support
     void displayProcessInfo() const;
     void displayProcess(std::ostream& out) const;
@@ -97,7 +109,6 @@ public:
     void clearRecentOutputs() {
         outputBuffer.clear();
     }
-
 };
 
 #endif // PROCESS_H

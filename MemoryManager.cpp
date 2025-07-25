@@ -15,8 +15,6 @@ bool MemoryManager::allocate(const std::string& processName) {
             // Calculate leftover space  after allocation
             int remaining = it->size - memPerProc;
 
-
-
             // Update block used by the process
             it->occupied = true;
             it->size = memPerProc;

@@ -11,6 +11,7 @@
 //NEW
 #include "Scheduler.h"
 #include "MemoryManager.h"
+#include "MemoryAllocator.h"
 
 
 class FCFSScheduler: public Scheduler {
@@ -30,9 +31,11 @@ private:
 
     // New
     MemoryManager* memoryManager = nullptr;
+    PagingAllocator* pagingAllocator;
 
 public:
     FCFSScheduler(int cores, int delayPerExecution, MemoryManager* memMgr);
+    FCFSScheduler(int cores, int delayPerExecution, PagingAllocator* pagingAllocator);
     ~FCFSScheduler();
 
     void start();

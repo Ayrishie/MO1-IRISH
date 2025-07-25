@@ -1,11 +1,17 @@
 ﻿#include "Console.h"
 #include <cstdlib>
-
 #include "Console.h"
 #include <iostream>
-#include <filesystem> 
-using namespace std;
+#include <filesystem>
 
+// check for OS Platform for single MACRO definition for terminal clearing
+#ifdef _WIN32
+#define SYSCLEAR system("cls");
+#else
+#define SYSCLEAR system("clear");
+#endif
+
+using namespace std;
 
 //Handling File of process
 const std::string logDir = "processesLogs";
@@ -399,12 +405,8 @@ void Console::showProcessScreen(const std::string& procName) {
         return;
     }
 
-    // Clear screen
-#ifdef _WIN32
-    system("cls");
-#else
-    system("clear");
-#endif
+    // Clear screen MACRO
+    SYSCLEAR;
 
     // Main loop
     while (true) {
@@ -462,11 +464,7 @@ void Console::showProcessScreen(const std::string& procName) {
 
             if (cmd == "EXIT") {
                 // return out of showProcessScreen entirely
-#ifdef _WIN32
-                system("cls");
-#else
-                system("clear");
-#endif          
+                SYSCLEAR;
                 header();
                 return;
             }

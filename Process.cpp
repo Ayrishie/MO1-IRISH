@@ -44,15 +44,17 @@ Process::Process(const std::string& pname, int commands, size_t memory)
     }
 }
 
-Process::Process(const std::string& pname, const std::vector<std::shared_ptr<Instruction>>& instrs, size_t memory)
+Process::Process(const std::string& pname, const std::vector<std::shared_ptr<Instruction>>& instrs, size_t processMemory, size_t memoryPerFrame)
     : name(pname),
     total_commands(static_cast<int>(instrs.size())),
     executed_commands(0),
     core_id(-1),
-    memory(memory),
+    processMemory(processMemory),
     start_time(system_clock::now()),
     current_instruction(0),
-    instructions(instrs)
+    instructions(instrs),
+    pageSize(memoryPerFrame),
+    numPages((processMemory + memoryPerFrame - 1) / memoryPerFrame)
 {
     lock_guard<mutex> lock(id_mutex);
     process_id = next_process_id++;
@@ -71,6 +73,13 @@ Process::Process(const std::string& pname, const std::vector<std::shared_ptr<Ins
             *log_file << "[" << i << "] " << instructions[i]->toString() << endl;
         }
         *log_file << "Execution log:" << endl;
+    }
+
+    // INitialize empty pages
+    for (size_t pageIndex = 0; pageIndex < numPages; ++pageIndex) {
+        // initialize virtual addressing scheme
+        // memory frame pointer initialized to sentinel value -1 since it does not point to any memory location
+        this->pageTable.push_back({pageIndex, -1, false, false });
     }
 }
 
@@ -240,5 +249,13 @@ void Process::displayProcessInfo() const {
 
     }
     cout << endl;
+}
+
+void Process::setMemBlock(void* block) {
+    memBlock = block;
+}
+
+void* Process::getMemBlock() const {
+    return memBlock;
 }
 

@@ -7,6 +7,10 @@ FCFSScheduler::FCFSScheduler(int cores, int delayPerExecution, MemoryManager* me
     : cores(cores), delayPerExecution(delayPerExecution), scheduler_running(false), memoryManager(memMgr) {
 }
 
+FCFSScheduler::FCFSScheduler(int cores, int delayPerExecution, PagingAllocator* pagingAllocator)
+    : cores(cores), delayPerExecution(delayPerExecution), scheduler_running(false), pagingAllocator(pagingAllocator) {
+}
+
 FCFSScheduler::~FCFSScheduler() {
     stop();
 }
@@ -33,7 +37,14 @@ void FCFSScheduler::stop() {
 void FCFSScheduler::addProcess(std::shared_ptr<Process> process) {
     {
         std::lock_guard<std::mutex> lock(queue_mutex);
+        // Allocate memory for the process
+        void* memBlock = pagingAllocator->allocate(process); ////////////////
+
+        if (!memBlock) {
+            return;
+        }
         ready_queue.push(process);
+        process->setMemBlock(memBlock); ///////////
     }
     processes.push_back(process);
     cv.notify_one();
