@@ -22,16 +22,20 @@ private:
 public:
     InstructionGenerator()
         : rng(std::random_device{}()),
-        instructionTypeDist(0, 5),  // 0=PRINT, 1=DECLARE, 2=ADD, 3=SUBTRACT, 4=SLEEP, 5=FOR
+        instructionTypeDist(0, 7),  // 0=PRINT, 1=DECLARE, 2=ADD, 3=SUBTRACT, 4=SLEEP, 5=FOR, 6=READ, 7=WRITE
         valueDist(0, 1000),         // Random values 0-1000 for uint16
         sleepDist(1, 10),           // Sleep 1-10 cycles
         repeatsDist(1, 5),          // For loops repeat 1-5 times
         forInstructionCountDist(1, 3), // 1-3 instructions per for loop
-        variableNameDist(0, variableNames.size() - 1) {
-    }
+        variableNameDist(0, variableNames.size() - 1),
+        addressDist(0, memPerProc - 2)  // force alignment in instructions
+    {}
 
     std::shared_ptr<Instruction> generateRandomInstruction(const std::string& processName, int nestingLevel = 0) {
         int type = instructionTypeDist(rng);
+
+        std::uniform_int_distribution<uint16_t> addressDist(0, memPerProc - 2);  // ensure space for 2-byte read
+        uint16_t addr = (addressDist(rng) / 2) * 2;  // force alignment
 
         // Limit nesting depth for FOR loops (max 3 levels as per spec)
         if (type == 5 && nestingLevel >= 3) {
@@ -39,20 +43,24 @@ public:
         }
 
         switch (type) {
-        case 0: // PRINT
-            return generatePrintInstruction(processName);
-        case 1: // DECLARE
-            return generateDeclareInstruction();
-        case 2: // ADD
-            return generateAddInstruction();
-        case 3: // SUBTRACT
-            return generateSubtractInstruction();
-        case 4: // SLEEP
-            return generateSleepInstruction();
-        case 5: // FOR
-            return generateForInstruction(processName, nestingLevel + 1);
-        default:
-            return generatePrintInstruction(processName);
+            case 0: // PRINT
+                return generatePrintInstruction(processName);
+            case 1: // DECLARE
+                return generateDeclareInstruction();
+            case 2: // ADD
+                return generateAddInstruction();
+            case 3: // SUBTRACT
+                return generateSubtractInstruction();
+            case 4: // SLEEP
+                return generateSleepInstruction();
+            case 5: // FOR
+                return generateForInstruction(processName, nestingLevel + 1);
+            case 6: // READ
+                return generateReadInstruction();
+            case 7: // WRITE
+                return generateWriteInstruction();
+            default:
+                return generatePrintInstruction(processName);
         }
     }
 
@@ -67,29 +75,6 @@ public:
     }
 
 private:
-    std::shared_ptr<Instruction> generatePrintInstruction(const std::string& processName) {
-        // As per spec: Unless specified in test case, msg should be "Hello world from <process_name>!"
-        std::string message = "Hello world from " + processName + "!";
-
-        return std::make_shared<PrintInstruction>(message);
-
-
-        //// 30% chance to include a variable
-        //if (std::uniform_int_distribution<int>(0, 9)(rng) < 3) {
-        //    std::string varName = getRandomVariableName();
-        //    return std::make_shared<PrintInstruction>("Value from " + processName + ": ", varName);
-        //}
-        //else {
-        //    return std::make_shared<PrintInstruction>(message);
-        //}
-    }
-
-    std::shared_ptr<Instruction> generateDeclareInstruction() {
-        std::string varName = getRandomVariableName();
-        uint16_t value = valueDist(rng);
-        return std::make_shared<DeclareInstruction>(varName, value);
-    }
-
     std::shared_ptr<Instruction> generateAddInstruction() {
         std::string result = getRandomVariableName();
         std::string op1 = getRandomVariableName();
@@ -152,6 +137,42 @@ private:
         }
 
         return std::make_shared<ForInstruction>(forInstructions, repeats);
+    }
+    
+    // memory access
+    std::shared_ptr<Instruction> generatePrintInstruction(const std::string& processName) {
+        // As per spec: Unless specified in test case, msg should be "Hello world from <process_name>!"
+        std::string message = "Hello world from " + processName + "!";
+
+        return std::make_shared<PrintInstruction>(message);
+
+
+        //// 30% chance to include a variable
+        //if (std::uniform_int_distribution<int>(0, 9)(rng) < 3) {
+        //    std::string varName = getRandomVariableName();
+        //    return std::make_shared<PrintInstruction>("Value from " + processName + ": ", varName);
+        //}
+        //else {
+        //    return std::make_shared<PrintInstruction>(message);
+        //}
+    }
+
+    std::shared_ptr<Instruction> generateDeclareInstruction() {
+        std::string varName = getRandomVariableName();
+        uint16_t value = valueDist(rng);
+        return std::make_shared<DeclareInstruction>(varName, value);
+    }
+
+    std::shared_ptr<Instruction> generateWriteInstruction() {
+        std::string var = getRandomVariableName();
+        uint16_t addr = (addressDist(rng) / 2) * 2;
+        return std::make_shared<WriteInstruction>(addr, var);
+    }
+
+    std::shared_ptr<Instruction> generateReadInstruction() {
+        std::string var = getRandomVariableName();
+        uint16_t addr = (addressDist(rng) / 2) * 2;
+        return std::make_shared<ReadInstruction>(var, addr);
     }
 
     std::string getRandomVariableName() {

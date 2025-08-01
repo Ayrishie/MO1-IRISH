@@ -7,33 +7,54 @@
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
+#include "MemoryAllocator.h"
+
+// 0=PRINT, 1=DECLARE, 2=ADD, 3=SUBTRACT, 4=SLEEP, 5=FOR, 6=READ, 7=WRITE
+
+#define PRINT     0;
+#define DECLARE   1;
+#define ADD       2;
+#define SUBTRACT  3;
+#define SLEEP     4;
+#define FOR       5;
+#define READ      6;
+#define WRITE     7;
 
 // Forward declaration
 class ProcessContext;
 
 // Base instruction interface
 class Instruction {
+protected:
+    int type;
+
 public:
     virtual ~Instruction() = default;
     virtual bool execute(ProcessContext& context) = 0;  // Returns true if instruction completed
     virtual std::string toString() const = 0;
     virtual int getExecutionCycles() const { return 1; }  // Default: 1 cycle per instruction
+    virtual int getInstructionType() const { return type; }
+
+    virtual bool memoryAccessed() const { return false; }
+    virtual std::optional<uint16_t> getAddress() const { return std::nullopt; }
 };
 
 // Process context to hold variables and state
 class ProcessContext {
 private:
-    std::unordered_map<std::string, uint16_t> variables;
+    std::unordered_map<std::string, uint16_t> variables; // Simulated symbol table
     std::string processName;
     int currentCycle;
     int sleepCycles;
     std::vector<std::string> outputBuffer;  // To store PRINT outputs
+    // NEW
+    std::unordered_map<uint16_t, uint16_t> memory;  // Simulated memory
 
 public:
-    ProcessContext(const std::string& name) : processName(name), currentCycle(0), sleepCycles(0) {}
+    ProcessContext(const std::string& name) 
+        : processName(name), currentCycle(0), sleepCycles(0) {}
 
-    // Variable management
-    uint16_t getVariable(const std::string& name) {
+   uint16_t getVariable(const std::string& name) {
         auto it = variables.find(name);
         return (it != variables.end()) ? it->second : 0;  // Auto-declare with 0 if not found
     }
@@ -56,7 +77,18 @@ public:
     const std::string& getProcessName() const { return processName; }
     int getCurrentCycle() const { return currentCycle; }
     void incrementCycle() { currentCycle++; }
-};
+
+    // Simulated memory access
+    void writeMemory(uint16_t address, uint16_t value) {
+        memory[address] = value;
+    }
+
+    uint16_t readMemory(uint16_t address) const {
+        auto it = memory.find(address);
+        return (it != memory.end()) ? it->second : 0;
+    }
+};  // Variable management
+   
 
 // PRINT instruction
 class PrintInstruction : public Instruction {
@@ -66,9 +98,12 @@ private:
     bool hasVariable;
 
 public:
-    PrintInstruction(const std::string& msg) : message(msg), hasVariable(false) {}
+    PrintInstruction(const std::string& msg) 
+        : message(msg), hasVariable(false), type(PRINT) {
+    }
+
     PrintInstruction(const std::string& msg, const std::string& var)
-        : message(msg), variable(var), hasVariable(true) {
+        : message(msg), variable(var), hasVariable(true), type(PRINT) {
     }
 
     bool execute(ProcessContext& context) override {
@@ -100,7 +135,7 @@ private:
 
 public:
     DeclareInstruction(const std::string& var, uint16_t val)
-        : variableName(var), value(val) {
+        : variableName(var), value(val), type(DECLARE) {
     }
 
     bool execute(ProcessContext& context) override {
@@ -126,19 +161,19 @@ private:
 
 public:
     AddInstruction(const std::string& res, const std::string& op1, const std::string& op2)
-        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false) {
+        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false), type(ADD) {
     }
 
     AddInstruction(const std::string& res, const std::string& op1, uint16_t op2)
-        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true) {
+        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true), type(ADD) {
     }
 
     AddInstruction(const std::string& res, uint16_t op1, const std::string& op2)
-        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false) {
+        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false), type(ADD) {
     }
 
     AddInstruction(const std::string& res, uint16_t op1, uint16_t op2)
-        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true) {
+        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true), type(ADD) {
     }
 
     bool execute(ProcessContext& context) override {
@@ -173,19 +208,19 @@ private:
 
 public:
     SubtractInstruction(const std::string& res, const std::string& op1, const std::string& op2)
-        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false) {
+        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false), type(SUBTRACT) {
     }
 
     SubtractInstruction(const std::string& res, const std::string& op1, uint16_t op2)
-        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true) {
+        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true), type(SUBTRACT) {
     }
 
     SubtractInstruction(const std::string& res, uint16_t op1, const std::string& op2)
-        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false) {
+        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false), type(SUBTRACT) {
     }
 
     SubtractInstruction(const std::string& res, uint16_t op1, uint16_t op2)
-        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true) {
+        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true), type(SUBTRACT) {
     }
 
     bool execute(ProcessContext& context) override {
@@ -236,7 +271,7 @@ private:
 
 public:
     ForInstruction(const std::vector<std::shared_ptr<Instruction>>& instrs, int reps)
-        : instructions(instrs), repeats(reps), currentIteration(0), currentInstructionIndex(0) {
+        : instructions(instrs), repeats(reps), currentIteration(0), currentInstructionIndex(0), type(FOR) {
     }
 
     bool execute(ProcessContext& context) override {
@@ -267,6 +302,69 @@ public:
 
     std::string toString() const override {
         return "FOR([" + std::to_string(instructions.size()) + " instructions], " + std::to_string(repeats) + ")";
+    }
+};
+
+class WriteInstruction : public Instruction {
+private:
+    uint16_t address;
+    std::string variable;
+
+public:
+    WriteInstruction(uint16_t addr, const std::string& var)
+        : address(addr), variable(var), type(WRITE) {
+    }
+
+    bool execute(ProcessContext& context) override {
+        uint16_t value = context.getVariable(variable);
+        context.writeMemory(address, value);
+        return true;
+    }
+
+    std::string toString() const override {
+        std::stringstream ss;
+        ss << "WRITE(0x" << std::hex << address << ", " << variable << ")";
+        return ss.str();
+    }
+
+    bool memoryAccessed() const override { 
+        return true; 
+    }
+
+    std::optional<uint16_t> getMemoryAddress() const override {
+        return address;
+    }
+};
+
+
+class ReadInstruction : public Instruction {
+private:
+    std::string variable;
+    uint16_t address;
+
+public:
+    ReadInstruction(const std::string& var, uint16_t addr)
+        : variable(var), address(addr), type(READ) {
+    }
+
+    bool execute(ProcessContext& context) override {
+        uint16_t value = context.readMemory(address);
+        context.setVariable(variable, value);
+        return true;
+    }
+
+    std::string toString() const override {
+        std::stringstream ss;
+        ss << "READ(" << variable << ", 0x" << std::hex << address << ")";
+        return ss.str();
+    }
+
+    bool memoryAccessed() const override {
+        return true;
+    }
+
+    std::optional<uint16_t> getMemoryAddress() const override {
+        return address;
     }
 };
 

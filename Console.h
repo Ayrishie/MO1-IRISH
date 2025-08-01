@@ -12,11 +12,14 @@
 #include <sstream>
 #include <fstream>
 #include <algorithm>
+#include <random>
 
 #include "Process.h"
 #include "RRScheduler.h"
 #include "FCFSScheduler.h"
 #include "Scheduler.h"
+#include "MemoryManager.h"
+#include "MemoryAllocator.h"
 
 class Console {
 private:
@@ -40,6 +43,11 @@ private:
     int minInstructions = 0;
     int maxInstructions = 0;
     int delayPerExecution = 0;
+    int maxOverallMem = 0;
+    int memPerFrame = 0;
+    int minMemPerProc = 0;
+    int maxMemPerProc = 0;
+    /*int memPerProc = 0;*/
     std::string schedulerType;
 
     // Private functions
@@ -48,6 +56,12 @@ private:
     void printUtilization(std::ostream* out = nullptr) const;
     void listProcesses();
 
+    // New
+    std::unique_ptr<MemoryManager> memoryManager;
+    std::unique_ptr<PagingAllocator> pagingAllocator;
+
+    int generateProcessSize();
+
 public:
     Console(); // Default constructor
 
@@ -55,7 +69,7 @@ public:
     void header();
     void menu();
     void start();
-    void createProcessFromCommand(const std::string& procName);
+    void createProcessFromCommand(const std::string& procName, int procMem);
     void attachToProcessScreen(const std::string& procName);
     void initialize();
     void clear();
@@ -65,6 +79,10 @@ public:
     void schedulerTest();
     void reportUtil();
     void parseInput(std::string userInput);
+
+    // NEW
+    bool memoryCheck(int maxMem, int frameSize, int procMem);
+    bool memoryCheck(int maxMem, int frameSize, int minMemPerProc, int maxMemPerProc);
 };
 
 #endif

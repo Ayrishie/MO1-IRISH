@@ -9,6 +9,9 @@
 #include <chrono>
 #include "Process.h"
 #include "Scheduler.h"
+//#include "MemoryManager.h"
+#include "MemoryAllocator.h"
+#include "Instruction.h"
 
 using namespace std;
 using namespace chrono;
@@ -30,8 +33,15 @@ private:
 
 	void scheduleCPU(int coreId);
 
+	// New
+	//MemoryManager* memoryManager = nullptr;
+	PagingAllocator* pagingAllocator = nullptr;
+
+
 public:
-	RRScheduler(int cores, int quantum, int delayPerExecution);
+	//RRScheduler(int cores, int quantum, int delayPerExecution, MemoryManager* memMgr);
+	RRScheduler(int cores, int quantum, int delayPerExecution, PagingAllocator* pagingAllocator);
+
 	~RRScheduler();
 
 	void enqueueProcess(shared_ptr<Process> process);

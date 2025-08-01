@@ -3,8 +3,12 @@
 #include <chrono>
 
 
-FCFSScheduler::FCFSScheduler(int cores, int delayPerExecution)
-    : cores(cores), delayPerExecution(delayPerExecution), scheduler_running(false) {
+FCFSScheduler::FCFSScheduler(int cores, int delayPerExecution, MemoryManager* memMgr)
+    : cores(cores), delayPerExecution(delayPerExecution), scheduler_running(false), memoryManager(memMgr) {
+}
+
+FCFSScheduler::FCFSScheduler(int cores, int delayPerExecution, PagingAllocator* pagingAllocator)
+    : cores(cores), delayPerExecution(delayPerExecution), scheduler_running(false), pagingAllocator(pagingAllocator) {
 }
 
 FCFSScheduler::~FCFSScheduler() {
@@ -33,6 +37,10 @@ void FCFSScheduler::stop() {
 void FCFSScheduler::addProcess(std::shared_ptr<Process> process) {
     {
         std::lock_guard<std::mutex> lock(queue_mutex);
+        // Allocate memory for the process
+        if (!memBlock) {
+            return;
+        }
         ready_queue.push(process);
     }
     processes.push_back(process);
@@ -42,30 +50,47 @@ void FCFSScheduler::addProcess(std::shared_ptr<Process> process) {
 void FCFSScheduler::cpuWorker(int coreId) {
     while (scheduler_running) {
         std::shared_ptr<Process> process;
-        {
+        {   // Dequeue (or wait)
             std::unique_lock<std::mutex> lock(queue_mutex);
             cv.wait(lock, [this] {
                 return !ready_queue.empty() || !scheduler_running;
                 });
-
             if (!scheduler_running) break;
             if (ready_queue.empty()) continue;
-
             process = ready_queue.front();
             ready_queue.pop();
         }
 
-        if (process && !process->isFinished()) {
-            process->core_id = coreId;
-            while (!process->isFinished()) {
-                process->executeCommand(coreId);
-                //std::this_thread::sleep_for(std::chrono::milliseconds(1)); // For testing lower instruction
-                std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
+        if (!process || process->isFinished()) continue;
+
+        // Only try to allocate once per process
+        if (memoryManager && !memoryManager->isAllocated(process->getName())) {
+            if (!memoryManager->allocate(process->getName())) {
+                // No room—push back to tail and retry later
+                std::lock_guard<std::mutex> lock(queue_mutex);
+                ready_queue.push(process);
+                cv.notify_one();
+                continue;
             }
-            process->core_id = -1;
+        }
+
+        // Run to completion 
+        process->core_id = coreId;
+        while (!process->isFinished()) {
+            process->executeCommand(coreId);
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(delayPerExecution)
+            );
+        }
+        process->core_id = -1;
+
+        // Free memory when done
+        if (memoryManager) {
+            memoryManager->free(process->getName());
         }
     }
 }
+
 
 void FCFSScheduler::displayProcesses() const {
     std::lock_guard<std::mutex> lock(queue_mutex);
