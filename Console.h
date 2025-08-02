@@ -18,7 +18,6 @@
 #include "RRScheduler.h"
 #include "FCFSScheduler.h"
 #include "Scheduler.h"
-#include "MemoryManager.h"
 #include "MemoryAllocator.h"
 
 class Console {
@@ -57,7 +56,6 @@ private:
     void listProcesses();
 
     // New
-    std::unique_ptr<MemoryManager> memoryManager;
     std::unique_ptr<PagingAllocator> pagingAllocator;
 
     int generateProcessSize();
@@ -81,7 +79,6 @@ public:
     void parseInput(std::string userInput);
 
     // NEW
-    bool memoryCheck(int maxMem, int frameSize, int procMem);
     bool memoryCheck(int maxMem, int frameSize, int minMemPerProc, int maxMemPerProc);
 };
 

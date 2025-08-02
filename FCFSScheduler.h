@@ -10,7 +10,6 @@
 
 //NEW
 #include "Scheduler.h"
-#include "MemoryManager.h"
 #include "MemoryAllocator.h"
 
 
@@ -30,11 +29,9 @@ private:
     void cpuWorker(int coreId);
 
     // New
-    MemoryManager* memoryManager = nullptr;
-    PagingAllocator* pagingAllocator;
+    PagingAllocator* pagingAllocator = nullptr;
 
 public:
-    FCFSScheduler(int cores, int delayPerExecution, MemoryManager* memMgr);
     FCFSScheduler(int cores, int delayPerExecution, PagingAllocator* pagingAllocator);
     ~FCFSScheduler();
 

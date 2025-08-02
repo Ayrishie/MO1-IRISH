@@ -2,11 +2,6 @@
 #include <iostream>
 #include <chrono>
 
-
-FCFSScheduler::FCFSScheduler(int cores, int delayPerExecution, MemoryManager* memMgr)
-    : cores(cores), delayPerExecution(delayPerExecution), scheduler_running(false), memoryManager(memMgr) {
-}
-
 FCFSScheduler::FCFSScheduler(int cores, int delayPerExecution, PagingAllocator* pagingAllocator)
     : cores(cores), delayPerExecution(delayPerExecution), scheduler_running(false), pagingAllocator(pagingAllocator) {
 }

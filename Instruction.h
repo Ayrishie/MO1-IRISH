@@ -11,14 +11,14 @@
 
 // 0=PRINT, 1=DECLARE, 2=ADD, 3=SUBTRACT, 4=SLEEP, 5=FOR, 6=READ, 7=WRITE
 
-#define PRINT     0;
-#define DECLARE   1;
-#define ADD       2;
-#define SUBTRACT  3;
-#define SLEEP     4;
-#define FOR       5;
-#define READ      6;
-#define WRITE     7;
+#define PRINT     0
+#define DECLARE   1
+#define ADD       2
+#define SUBTRACT  3
+#define SLEEP     4
+#define FOR       5
+#define READ      6
+#define WRITE     7
 
 // Forward declaration
 class ProcessContext;
@@ -36,7 +36,6 @@ public:
     virtual int getInstructionType() const { return type; }
 
     virtual bool memoryAccessed() const { return false; }
-    virtual std::optional<uint16_t> getAddress() const { return std::nullopt; }
 };
 
 // Process context to hold variables and state
@@ -99,11 +98,13 @@ private:
 
 public:
     PrintInstruction(const std::string& msg) 
-        : message(msg), hasVariable(false), type(PRINT) {
+        : message(msg), hasVariable(false) {
+        type = PRINT;
     }
 
     PrintInstruction(const std::string& msg, const std::string& var)
-        : message(msg), variable(var), hasVariable(true), type(PRINT) {
+        : message(msg), variable(var), hasVariable(true) {
+        type = PRINT;
     }
 
     bool execute(ProcessContext& context) override {
@@ -135,7 +136,8 @@ private:
 
 public:
     DeclareInstruction(const std::string& var, uint16_t val)
-        : variableName(var), value(val), type(DECLARE) {
+        : variableName(var), value(val) {
+        type = DECLARE;
     }
 
     bool execute(ProcessContext& context) override {
@@ -161,19 +163,23 @@ private:
 
 public:
     AddInstruction(const std::string& res, const std::string& op1, const std::string& op2)
-        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false), type(ADD) {
+        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false) {
+        type = ADD;
     }
 
     AddInstruction(const std::string& res, const std::string& op1, uint16_t op2)
-        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true), type(ADD) {
+        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true) {
+        type = ADD;
     }
 
     AddInstruction(const std::string& res, uint16_t op1, const std::string& op2)
-        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false), type(ADD) {
+        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false){
+        type = ADD;
     }
 
     AddInstruction(const std::string& res, uint16_t op1, uint16_t op2)
-        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true), type(ADD) {
+        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true) {
+        type = ADD;
     }
 
     bool execute(ProcessContext& context) override {
@@ -208,19 +214,23 @@ private:
 
 public:
     SubtractInstruction(const std::string& res, const std::string& op1, const std::string& op2)
-        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false), type(SUBTRACT) {
+        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false) {
+        type = SUBTRACT;
     }
 
     SubtractInstruction(const std::string& res, const std::string& op1, uint16_t op2)
-        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true), type(SUBTRACT) {
+        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true) {
+        type = SUBTRACT;
     }
 
     SubtractInstruction(const std::string& res, uint16_t op1, const std::string& op2)
-        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false), type(SUBTRACT) {
+        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false){
+        type = SUBTRACT;
     }
 
     SubtractInstruction(const std::string& res, uint16_t op1, uint16_t op2)
-        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true), type(SUBTRACT) {
+        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true) {
+        type = SUBTRACT;
     }
 
     bool execute(ProcessContext& context) override {
@@ -247,7 +257,9 @@ private:
     uint8_t cycles;
 
 public:
-    SleepInstruction(uint8_t c) : cycles(c) {}
+    SleepInstruction(uint8_t c) : cycles(c) {
+        type = SLEEP;
+    }
 
     bool execute(ProcessContext& context) override {
         context.setSleep(cycles);
@@ -271,7 +283,8 @@ private:
 
 public:
     ForInstruction(const std::vector<std::shared_ptr<Instruction>>& instrs, int reps)
-        : instructions(instrs), repeats(reps), currentIteration(0), currentInstructionIndex(0), type(FOR) {
+        : instructions(instrs), repeats(reps), currentIteration(0), currentInstructionIndex(0) {
+        type = FOR;
     }
 
     bool execute(ProcessContext& context) override {
@@ -312,7 +325,8 @@ private:
 
 public:
     WriteInstruction(uint16_t addr, const std::string& var)
-        : address(addr), variable(var), type(WRITE) {
+        : address(addr), variable(var) {
+        type = WRITE;
     }
 
     bool execute(ProcessContext& context) override {
@@ -331,7 +345,7 @@ public:
         return true; 
     }
 
-    std::optional<uint16_t> getMemoryAddress() const override {
+    uint16_t getMemoryAddress() const {
         return address;
     }
 };
@@ -344,7 +358,8 @@ private:
 
 public:
     ReadInstruction(const std::string& var, uint16_t addr)
-        : variable(var), address(addr), type(READ) {
+        : variable(var), address(addr) {
+        type = READ;
     }
 
     bool execute(ProcessContext& context) override {
@@ -363,7 +378,7 @@ public:
         return true;
     }
 
-    std::optional<uint16_t> getMemoryAddress() const override {
+    uint16_t getMemoryAddress() const {
         return address;
     }
 };

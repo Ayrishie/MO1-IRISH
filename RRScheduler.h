@@ -9,7 +9,6 @@
 #include <chrono>
 #include "Process.h"
 #include "Scheduler.h"
-//#include "MemoryManager.h"
 #include "MemoryAllocator.h"
 #include "Instruction.h"
 
@@ -34,7 +33,6 @@ private:
 	void scheduleCPU(int coreId);
 
 	// New
-	//MemoryManager* memoryManager = nullptr;
 	PagingAllocator* pagingAllocator = nullptr;
 
 

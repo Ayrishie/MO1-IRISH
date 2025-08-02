@@ -132,83 +132,83 @@ void Process::displayProcess() const {
     displayProcess(std::cout);
 }
 
-void Process::executeCommand(int coreId) {
-    if (isFinished()) return;
-
-    // 1) assign core & advance the context cycle
-    core_id = coreId;
-    context->incrementCycle();
-
-    // 2) handle sleeping exactly as before
-    if (context->isSleeping()) {
-        context->decrementSleep();
-
-        auto now = system_clock::now();
-        time_t t = system_clock::to_time_t(now);
-        tm timeinfo;
-        localtime_s(&timeinfo, &t);
-
-        std::lock_guard<std::mutex> lock(log_mutex);
-        if (log_file && log_file->is_open()) {
-            *log_file
-                << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
-                << "Core:" << coreId << " Process sleeping..."
-                << std::endl;
-        }
-        return;
-    }
-
-    // 3) execute the instruction
-    if (current_instruction < instructions.size()) {
-        bool done = instructions[current_instruction]->execute(*context);
-
-        // timestamp for this cycle
-        auto now = system_clock::now();
-        time_t t = system_clock::to_time_t(now);
-        tm timeinfo;
-        localtime_s(&timeinfo, &t);
-
-        std::lock_guard<std::mutex> lock(log_mutex);
-        if (log_file && log_file->is_open()) {
-            // a) log the “Executing:” line
-            *log_file
-                << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
-                << "Core:" << coreId << " Executing: "
-                << instructions[current_instruction]->toString()
-                << std::endl;
-
-            // b) pull out any PRINT outputs, build full prefix+color line, then log + stash
-            const auto& outputs = context->getOutputBuffer();
-            for (const auto& msg : outputs) {
-                // build timestamp + core prefix
-                std::ostringstream line;
-                // timestamp in orange
-                line << "\x1b[33m("
-                    << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p")
-                    << ")\x1b[0m ";
-                // core in cyan
-                line << "\x1b[36mCore:" << coreId << "\x1b[0m ";
-                // message in green (with quotes)
-                line << "\x1b[32m\"" << msg << "\"\x1b[0m";
-
-                // log the colored line
-                *log_file << "    Output: " << line.str() << std::endl;
-
-                // stash into your in-memory buffer (already colorized & timestamped)
-                addOutput(line.str());
-            }
-            // c) clear the Instruction.h buffer
-            context->clearOutputBuffer();
-           
-        }
-
-        // 4) advance your program counter
-        if (done) {
-            executed_commands++;
-            current_instruction++;
-        }
-    }
-}
+//void Process::executeCommand(int coreId) {
+//    if (isFinished()) return;
+//
+//    // 1) assign core & advance the context cycle
+//    core_id = coreId;
+//    context->incrementCycle();
+//
+//    // 2) handle sleeping exactly as before
+//    if (context->isSleeping()) {
+//        context->decrementSleep();
+//
+//        auto now = system_clock::now();
+//        time_t t = system_clock::to_time_t(now);
+//        tm timeinfo;
+//        localtime_s(&timeinfo, &t);
+//
+//        std::lock_guard<std::mutex> lock(log_mutex);
+//        if (log_file && log_file->is_open()) {
+//            *log_file
+//                << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
+//                << "Core:" << coreId << " Process sleeping..."
+//                << std::endl;
+//        }
+//        return;
+//    }
+//
+//    // 3) execute the instruction
+//    if (current_instruction < instructions.size()) {
+//        bool done = instructions[current_instruction]->execute(*context);
+//
+//        // timestamp for this cycle
+//        auto now = system_clock::now();
+//        time_t t = system_clock::to_time_t(now);
+//        tm timeinfo;
+//        localtime_s(&timeinfo, &t);
+//
+//        std::lock_guard<std::mutex> lock(log_mutex);
+//        if (log_file && log_file->is_open()) {
+//            // a) log the “Executing:” line
+//            *log_file
+//                << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
+//                << "Core:" << coreId << " Executing: "
+//                << instructions[current_instruction]->toString()
+//                << std::endl;
+//
+//            // b) pull out any PRINT outputs, build full prefix+color line, then log + stash
+//            const auto& outputs = context->getOutputBuffer();
+//            for (const auto& msg : outputs) {
+//                // build timestamp + core prefix
+//                std::ostringstream line;
+//                // timestamp in orange
+//                line << "\x1b[33m("
+//                    << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p")
+//                    << ")\x1b[0m ";
+//                // core in cyan
+//                line << "\x1b[36mCore:" << coreId << "\x1b[0m ";
+//                // message in green (with quotes)
+//                line << "\x1b[32m\"" << msg << "\"\x1b[0m";
+//
+//                // log the colored line
+//                *log_file << "    Output: " << line.str() << std::endl;
+//
+//                // stash into your in-memory buffer (already colorized & timestamped)
+//                addOutput(line.str());
+//            }
+//            // c) clear the Instruction.h buffer
+//            context->clearOutputBuffer();
+//           
+//        }
+//
+//        // 4) advance your program counter
+//        if (done) {
+//            executed_commands++;
+//            current_instruction++;
+//        }
+//    }
+//}
 
 bool Process::executeCommand(int coreId) {
     if (isFinished()) return true;

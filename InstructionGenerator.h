@@ -18,6 +18,9 @@ private:
 
     std::vector<std::string> variableNames = { "x", "y", "z", "a", "b", "c", "counter", "temp", "result", "value" };
     std::uniform_int_distribution<size_t> variableNameDist;
+    std::uniform_int_distribution<int> addressDist;
+
+    int memPerProc;
 
 public:
     InstructionGenerator()

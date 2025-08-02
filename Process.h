@@ -78,7 +78,6 @@ public:
     std::string getCoreAssignment() const;
 
     // Updated execution method
-    void executeCommand(int coreId);
     bool executeCommand(int coreId);
 
     // Instruction-set management
@@ -93,7 +92,7 @@ public:
         return current_instruction;
     }
 
-    Instruction getNextInstruction() const {
+    std::shared_ptr<Instruction> getNextInstruction() const {
         return this->instructions[current_instruction];
     }
 
@@ -118,7 +117,7 @@ public:
         outputBuffer.clear();
     }
 
-    std::pair<size_t, size_t> Process::getPageAndOffset(uint16_t virtualAddress) const {
+    std::pair<size_t, size_t> getPageAndOffset(uint16_t virtualAddress) const {
         return { virtualAddress / pageSize, virtualAddress % pageSize };
     }
 };
