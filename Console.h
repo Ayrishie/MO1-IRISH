@@ -55,10 +55,14 @@ private:
         std::vector<std::shared_ptr<Instruction>>& parsedInstructions);
     int  generateProcessSize();
 
+    void vmstat();
+
 public:
     Console();
     void start();
     void header();
+    void processSmi();
+
     void menu();
     void initialize();
     void clear();

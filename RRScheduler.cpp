@@ -1,4 +1,5 @@
 #include "RRScheduler.h"
+#include "Instruction.h"   // <-- add this
 
 RRScheduler::RRScheduler(int cores, int quantum, int delayPerExecution, PagingAllocator* pagingAllocator) 
 : cores(cores), quantum(quantum), delayPerExecution(delayPerExecution), scheduler_running(false), pagingAllocator(pagingAllocator) {}
@@ -8,58 +9,85 @@ RRScheduler::RRScheduler(int cores, int quantum, int delayPerExecution, PagingAl
 RRScheduler::~RRScheduler() {
     stop();
 }
-
 void RRScheduler::scheduleCPU(int coreId) {
     while (scheduler_running) {
         shared_ptr<Process> process;
-        { // lock the access for the ready queue
+        {
             std::unique_lock<std::mutex> lock(queue_mutex);
-            cv.wait(lock, [this] { //wait for aprocess or scheduler stop
+            cv.wait(lock, [this] {
                 return !readyQueue.empty() || !scheduler_running;
                 });
 
-            if (!scheduler_running) break; // if scheduler stop then end the loop
-            if (readyQueue.empty()) continue; // still nothing to run
+            if (!scheduler_running) break;
+            if (readyQueue.empty()) continue;
 
-            //dequeue next process
             process = readyQueue.front();
             readyQueue.pop();
         }
 
-        if (!process || process->isFinished()) continue; // skip process if null or finished
+        if (!process || process->isFinished()) continue;
 
         process->core_id = coreId;
 
-        // DEMAND PAGING
-        // true if process pages are allocated in memory, otherwise false
-        bool executionStatus = process->executeCommand(coreId);
-
-        if (!executionStatus) {
-                // bring in the missing pages
-                pagingAllocator->allocate(process);
-            
+        // Check if process has any pages in memory
+        bool hasMemory = false;
+        if (pagingAllocator) {
+            hasMemory = pagingAllocator->isAllocated(process);
+            if (!hasMemory) {
+                // Allocate first page to start
+                pagingAllocator->allocate(process, 0);
+            }
         }
 
-
-        // get the next instruction to execute
-        
         int quantumUsed = 0;
-        while (quantumUsed < quantum && !process->isFinished()) {
-            // get the amount of executed cinstruction first
+        bool pageFault = false;
+
+        while (quantumUsed < quantum && !process->isFinished() && !pageFault) {
             int prevInstructions = process->executed_commands;
 
-            process->executeCommand(coreId); //execute the process
+            // Check if next instruction needs memory access
+            if (process->getCurrentInstructionLine() < process->getInstructions().size()) {
+                auto nextInstr = process->getInstructions()[process->getCurrentInstructionLine()];
 
-            if (process->executed_commands > prevInstructions) { //if instruction was executed then increment quantum cycle usage
+                if (nextInstr->memoryAccessed()) {
+                    uint16_t address = 0;
+                    if (auto rd = dynamic_cast<ReadInstruction*>(nextInstr.get())) {
+                        address = rd->getMemoryAddress();
+                    }
+                    else if (auto wr = dynamic_cast<WriteInstruction*>(nextInstr.get())) {
+                        address = wr->getMemoryAddress();
+                    }
+
+                    // Check if page is in memory
+                  // Check if page is in memory
+                    auto [pageNum, offset] = process->getPageAndOffset(address);
+
+                    auto& pageTable = process->getPageTable();
+
+
+                    if (pageTable.find(pageNum) == pageTable.end() || !pageTable[pageNum].inMemory) {
+                        // Page fault - need to load page
+                        pageFault = true;
+                        if (pagingAllocator) {
+                            pagingAllocator->allocate(process, pageNum);
+                        }
+                        break; // Restart this instruction after page is loaded
+                    }
+                }
+            }
+
+            bool executed = process->executeCommand(coreId);
+
+            if (process->executed_commands > prevInstructions) {
                 quantumUsed++;
             }
-            // Simulate work
+
             std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
         }
 
         process->core_id = -1;
 
-        // requeue process if it isn't finished
+        // Requeue if not finished
         if (!process->isFinished()) {
             std::lock_guard<std::mutex> lock(queue_mutex);
             readyQueue.push(process);

@@ -7,6 +7,8 @@
 #include <vector>
 #include <memory>
 #include <algorithm> // std::max
+#include <iostream>  // <-- add this
+
 
 class InstructionGenerator {
 private:

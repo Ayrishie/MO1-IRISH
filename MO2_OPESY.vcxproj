@@ -144,7 +144,10 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="Config.txt" />
+    <Text Include="csopesy-backing-store.txt" />
     <Text Include="csopesy-log.txt" />
+    <Text Include="csopesy-pager.log" />
+    <Text Include="pager.log" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

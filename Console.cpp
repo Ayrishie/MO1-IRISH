@@ -8,6 +8,8 @@
 #include <iomanip>            // put_time
 #include <algorithm>          // remove
 #include <random>             // random_device, mt19937, uniform_int_distribution
+#include <algorithm>  // for std::min
+#include <iomanip>    // (you already have this, keep it)
 
 // filesystem support (works both on GCC/Clang and MSVC)
 #if defined(_MSC_VER) && defined(_MSVC_LANG) && _MSVC_LANG >= 201703L
@@ -411,25 +413,38 @@ void Console::createProcessFromCommand(const std::string& procName, int procMem)
     }
 }
 
+// 4. In Console.cpp, completely replace the attachToProcessScreen method with:
 void Console::attachToProcessScreen(const std::string& procName) {
-    bool found = false;
+    std::shared_ptr<Process> foundProcess;
 
     {
         std::lock_guard<std::mutex> lock(processesMutex);
         for (const auto& process : processes) {
             if (process->getName() == procName) {
-                found = true;
+                foundProcess = process;
                 break;
             }
         }
     }
-    if (!found) {
+
+    if (!foundProcess) {
         std::cerr << "\033[31mError: Process \"" << procName << "\" not found.\033[0m\n";
         return;
     }
 
+    // Check for memory violation (NEW CHECK)
+    if (foundProcess->hasMemoryViolation()) {
+        std::cerr << "\033[31mProcess " << procName
+            << " shut down due to memory access violation error that occurred at "
+            << foundProcess->getViolationTime()
+            << ". 0x" << std::hex << foundProcess->getViolationAddress()
+            << " invalid.\033[0m\n";
+        return;
+    }
+    // If no violation, show the process screen as normal
     showProcessScreen(procName);
 }
+   
 
 
 
@@ -865,18 +880,74 @@ void Console::clear() {
 }
 
 
+void Console::processSmi() {
+    clear();
+
+    std::cout << "\033[32m"
+        << "=====================================\n"
+        << "|         PROCESS-SMI OUTPUT        |\n"
+        << "=====================================\n\033[0m";
+
+    std::cout << getCurrentTime() << "\n";
+    std::cout << "+----------------------------------------------------+\n"
+        << "| CSOPESY Process & Memory Information               |\n"
+        << "+====================================================+\n";
+
+    // Memory summary
+    if (pagingAllocator) {
+        const std::size_t totalMem = static_cast<std::size_t>(maxOverallMem);
+        const std::size_t usedMem = pagingAllocator->getTotalMemoryUsed();
+        const std::size_t freeMem = pagingAllocator->getFreeMemory();
+        const double      usagePct = totalMem ? (double)usedMem / totalMem * 100.0 : 0.0;
+
+        std::cout << "| Memory Usage: " << std::fixed << std::setprecision(1)
+            << usagePct << "% (" << usedMem << "/" << totalMem << " bytes)     |\n"
+            << "| Memory Available: " << freeMem << " bytes                    |\n";
+    }
+
+    // CPU summary
+    int activeCount = 0;
+    for (const auto& p : processes) if (!p->isFinished()) ++activeCount;
+    const int coresUsed = std::min(activeCount, cpuCount);
+    const double cpuUtil = cpuCount ? (double)coresUsed / cpuCount * 100.0 : 0.0;
+
+    std::cout << "| CPU Utilization: " << std::fixed << std::setprecision(1)
+        << cpuUtil << "% (" << coresUsed << "/" << cpuCount << " cores)        |\n"
+        << "+====================================================+\n"
+        << "| Processes:                                         |\n"
+        << "+----------------------------------------------------+\n"
+        << "| PID | Name      | Memory Usage                     |\n"
+        << "+----------------------------------------------------+\n";
+
+    // Per-process memory (frames currently resident)
+    for (const auto& p : processes) {
+        if (p->isFinished()) continue;
+
+        std::size_t pagesInMem = 0;
+        for (const auto& kv : p->getPageTable()) if (kv.second.inMemory) ++pagesInMem;
+
+        const std::size_t memUsedBytes = pagesInMem * static_cast<std::size_t>(memPerFrame);
+
+        std::cout << "| " << std::setw(3) << p->process_id
+            << " | " << std::setw(9) << p->name
+            << " | " << std::setw(6) << memUsedBytes << " bytes ("
+            << pagesInMem << " pages)              |\n";
+    }
+
+    std::cout << "+----------------------------------------------------+\n";
+}
+
+
 
 
 void Console::parseInput(std::string userInput) {
     std::string originalInput = userInput;
-
     std::string loweredInput = userInput;
     std::transform(loweredInput.begin(), loweredInput.end(), loweredInput.begin(), ::tolower);
-
     std::istringstream iss(loweredInput);
     std::vector<std::string> args;
     std::string token;
-
+   
     while (iss >> token) {
         args.push_back(token);
     }
@@ -906,17 +977,12 @@ void Console::parseInput(std::string userInput) {
     }
     else if (args[0] == "process-smi") {
         // show summarized CPU/memory usage (like nvidia-smi, but for your emulator)
-        clear();                    // optional, redraw header
-        printUtilization(nullptr);  // nullptr -> print to std::cout
+        // clear();                    // optional, redraw header
+        //printUtilization(nullptr);  // nullptr -> print to std::cout
+        processSmi();
     }
     else if (args[0] == "vmstat") {
-        // optional helper you listed in the menu
-        if (pagingAllocator) {
-            pagingAllocator->visualizeMemory();
-        }
-        else {
-            std::cout << "Paging allocator not initialized. Run 'initialize' first.\n";
-        }
+        vmstat();
     }
     else if (args[0] == "clear") {
         clear();
@@ -967,6 +1033,11 @@ void Console::parseInput(std::string userInput) {
 
 
 // New
+
+
+
+
+// For vmstat, the existing handler just calls visualizeMemory() which we've already enhanced
 
 bool Console::isValidProcessMemory(int procMem) {
     auto isPowerOfTwo = [](int x) {
@@ -1098,6 +1169,8 @@ void Console::createProcessWithInstructions(const std::string& procName,
 
     std::vector<std::shared_ptr<Instruction>> parsedInstructions;
     bool hasInvalidInstruction = false;
+    bool hasMemoryViolation = false;  // ADD THIS
+    uint16_t violatingAddress = 0;    // ADD THIS
 
     // --- 1) Split the script on ';' but keep quoted parts intact ---
     std::vector<std::string> instructionLines;
@@ -1224,6 +1297,18 @@ void Console::createProcessWithInstructions(const std::string& procName,
                 continue;
             }
             uint16_t addr = parseAddress(addrStr);
+
+            // VALIDATE ADDRESS IMMEDIATELY
+            if (addr >= procMem) {
+                std::cerr << "\033[31m[ERROR] Memory violation in instruction: WRITE 0x"
+                    << std::hex << addr << " - Address exceeds process memory limit (0x0-0x"
+                    << (procMem - 1) << ")\033[0m\n";
+                hasMemoryViolation = true;
+                violatingAddress = addr;
+                continue;  // Skip adding this instruction
+            }
+
+
             parsedInstructions.push_back(std::make_shared<WriteInstruction>(addr, var));
         }
         // ========== READ ==========
@@ -1238,6 +1323,18 @@ void Console::createProcessWithInstructions(const std::string& procName,
                 continue;
             }
             uint16_t addr = parseAddress(addrStr);
+
+            // VALIDATE ADDRESS IMMEDIATELY
+            if (addr >= procMem) {
+                std::cerr << "\033[31m[ERROR] Memory violation in instruction: READ from 0x"
+                    << std::hex << addr << " - Address exceeds process memory limit (0x0-0x"
+                    << (procMem - 1) << ")\033[0m\n";
+                hasMemoryViolation = true;
+                violatingAddress = addr;
+                continue;  // Skip adding this instruction
+            }
+
+
             parsedInstructions.push_back(std::make_shared<ReadInstruction>(var, addr));
         }
         // ========== PRINT ==========
@@ -1260,6 +1357,18 @@ void Console::createProcessWithInstructions(const std::string& procName,
         std::cerr << "\033[31m[ERROR] Too many instructions (max 50).\033[0m\n";
         return;
     }
+
+    // After parsing all instructions, check for violations:
+    if (hasMemoryViolation) {
+        std::cerr << "\033[31m[ERROR] Process not created due to memory violation in instructions.\033[0m\n";
+        return;
+    }
+
+    if (hasInvalidInstruction || parsedInstructions.empty()) {
+        std::cerr << "\033[31m[ERROR] Process not created due to invalid instruction(s).\033[0m\n";
+        return;
+    }
+
 
     // --- 2) Create the process and queue it ---
     auto process = std::make_shared<Process>(procName,
@@ -1363,3 +1472,88 @@ void Console::handlePrintInstruction(
     else
         out.push_back(std::make_shared<PrintInstruction>(literalToken));
 }
+
+
+// Add this method to Console.cpp
+void Console::vmstat() {
+    if (!pagingAllocator) {
+        std::cerr << "\033[31mError: Memory manager not initialized. Run 'initialize' first.\033[0m\n";
+        return;
+    }
+
+    clear();
+
+    std::cout << "\033[32m";
+    std::cout << "=====================================\n";
+    std::cout << "|          VMSTAT OUTPUT            |\n";
+    std::cout << "=====================================\n";
+    std::cout << "\033[0m";
+
+    // Memory statistics
+    size_t totalMem = pagingAllocator->getTotalMemory();
+    size_t usedMem = pagingAllocator->getTotalMemoryUsed();
+    size_t freeMem = pagingAllocator->getFreeMemory();
+
+    std::cout << "\033[36mMemory Statistics:\033[0m\n";
+    std::cout << "Total memory:     " << totalMem << " bytes\n";
+    std::cout << "Used memory:      " << usedMem << " bytes\n";
+    std::cout << "Free memory:      " << freeMem << " bytes\n";
+
+    // Calculate idle/active CPU ticks (simulated)
+    int activeCPUs = 0;
+    int totalProcesses = 0;
+    int activeProcesses = 0;
+
+    for (const auto& p : processes) {
+        totalProcesses++;
+        if (!p->isFinished()) {
+            activeProcesses++;
+            if (p->core_id >= 0) activeCPUs++;
+        }
+    }
+
+    // Simulated tick counts (based on process activity)
+    static size_t totalTicks = 0;
+    static size_t idleTicks = 0;
+    static size_t activeTicks = 0;
+
+    totalTicks += cpuCount;
+    activeTicks += activeCPUs;
+    idleTicks += (cpuCount - activeCPUs);
+
+    std::cout << "\n\033[36mCPU Statistics:\033[0m\n";
+    std::cout << "Idle cpu ticks:   " << idleTicks << "\n";
+    std::cout << "Active cpu ticks: " << activeTicks << "\n";
+    std::cout << "Total cpu ticks:  " << totalTicks << "\n";
+
+    // Paging statistics
+    std::cout << "\n\033[36mPaging Statistics:\033[0m\n";
+    std::cout << "Num paged in:     " << pagingAllocator->getTotalPagedIn() << "\n";
+    std::cout << "Num paged out:    " << pagingAllocator->getTotalPagedOut() << "\n";
+
+    std::cout << "\n----------------------------------------\n";
+
+    // Process details
+    std::cout << "\033[36mProcess Information:\033[0m\n";
+    std::cout << "Running processes and memory usage:\n";
+    std::cout << "----------------------------------------\n";
+
+    for (const auto& p : processes) {
+        if (p->isFinished()) continue;
+
+        size_t pagesInMem = 0;
+        for (const auto& kv : p->getPageTable()) {
+            if (kv.second.inMemory) pagesInMem++;
+        }
+
+        size_t memUsed = pagesInMem * memPerFrame;
+        std::cout << std::setw(10) << p->name
+            << " | PID: " << std::setw(3) << p->process_id
+            << " | Memory: " << std::setw(6) << memUsed << " bytes"
+            << " | Pages: " << pagesInMem << "/" << p->getPageTable().size()
+            << "\n";
+    }
+
+    std::cout << "----------------------------------------\n";
+}
+

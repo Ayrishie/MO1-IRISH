@@ -196,8 +196,11 @@ bool Process::executeCommand(int coreId) {
     core_id = coreId;
     context->incrementCycle();
 
+    // Check if instruction accesses memory
     if (current_instruction < instructions.size()) {
         auto instr = instructions[current_instruction];
+
+        // Check for memory access violations
         if (instr->memoryAccessed()) {
             uint16_t address = 0;
             if (auto rd = dynamic_cast<ReadInstruction*>(instr.get())) {
@@ -206,10 +209,47 @@ bool Process::executeCommand(int coreId) {
             else if (auto wr = dynamic_cast<WriteInstruction*>(instr.get())) {
                 address = wr->getMemoryAddress();
             }
+
+            // Check if address is within process bounds
+            if (address >= processMemory) {
+                // Get current time for violation tracking
+                auto now = system_clock::now();
+                time_t t = system_clock::to_time_t(now);
+                tm timeinfo;
+                localtime_s(&timeinfo, &t);
+
+                std::ostringstream timeStr;
+                timeStr << std::put_time(&timeinfo, "%H:%M:%S");
+
+                // Track violation details
+                memoryViolation = true;
+                violationTime = timeStr.str();
+                violationAddress = address;
+
+                std::cerr << "\033[31m[ACCESS VIOLATION] Process " << name
+                    << " attempted to access address 0x" << std::hex << address
+                    << " outside its memory space (0x0-0x" << processMemory - 1 << ")\033[0m\n";
+
+                // Log the violation
+                if (log_file && log_file->is_open()) {
+                    *log_file << "[ACCESS VIOLATION at " << violationTime
+                        << "] Attempted to access address 0x"
+                        << std::hex << address << " outside memory bounds\n";
+                }
+
+                // Mark process as terminated
+                current_instruction = instructions.size();
+                executed_commands = total_commands;
+                return true;
+            }
+
+            // Page fault handling is done by the scheduler
+            // Just ensure the page exists in our table
             ensureResident(address);
         }
     }
 
+    // Check if sleeping
     if (context->isSleeping()) {
         context->decrementSleep();
 
@@ -220,14 +260,13 @@ bool Process::executeCommand(int coreId) {
 
         std::lock_guard<std::mutex> lock(log_mutex);
         if (log_file && log_file->is_open()) {
-            *log_file
-                << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
-                << "Core:" << coreId << " Process sleeping..."
-                << std::endl;
+            *log_file << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
+                << "Core:" << coreId << " Process sleeping..." << std::endl;
         }
-        return true;
+        return false; // Still sleeping
     }
 
+    // Execute instruction
     if (current_instruction < instructions.size()) {
         bool done = instructions[current_instruction]->execute(*context);
 
@@ -238,17 +277,14 @@ bool Process::executeCommand(int coreId) {
 
         std::lock_guard<std::mutex> lock(log_mutex);
         if (log_file && log_file->is_open()) {
-            *log_file
-                << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
+            *log_file << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
                 << "Core:" << coreId << " Executing: "
-                << instructions[current_instruction]->toString()
-                << std::endl;
+                << instructions[current_instruction]->toString() << std::endl;
 
             const auto& outputs = context->getOutputBuffer();
             for (const auto& msg : outputs) {
                 std::ostringstream line;
-                line << "\x1b[33m(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p")
-                    << ")\x1b[0m ";
+                line << "\x1b[33m(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ")\x1b[0m ";
                 line << "\x1b[36mCore:" << coreId << "\x1b[0m ";
                 line << "\x1b[32m\"" << msg << "\"\x1b[0m";
 
@@ -262,8 +298,11 @@ bool Process::executeCommand(int coreId) {
             executed_commands++;
             current_instruction++;
         }
+
+        return false; // Not finished yet
     }
-    return true;
+
+    return true; // Process finished
 }
 
 bool Process::isFinished() const {

@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstdint>
 #include <sstream>
+#include <iostream>   // <-- add this
 #include "MemoryAllocator.h"
 
 // 0=PRINT, 1=DECLARE, 2=ADD, 3=SUBTRACT, 4=SLEEP, 5=FOR, 6=READ, 7=WRITE
@@ -94,11 +95,12 @@ public:
 
 class ProcessContext {
 private:
-    std::unordered_map<std::string, uint16_t> variables; // symbol table
+    static constexpr size_t MAX_VARIABLES = 32;  // 64 bytes / 2 bytes per uint16_t
+    std::unordered_map<std::string, uint16_t> variables;
     std::string processName;
     int currentCycle;
     int sleepCycles;
-    std::vector<std::string> outputBuffer;                // PRINT outputs
+    std::vector<std::string> outputBuffer;
     std::unordered_map<uint16_t, uint16_t> memory;        // simulated memory
 public:
     ProcessContext(const std::string& name)
@@ -107,10 +109,31 @@ public:
 
     uint16_t getVariable(const std::string& name) {
         auto it = variables.find(name);
-        return (it != variables.end()) ? it->second : 0;   // auto-declare with 0
-    }
-    void setVariable(const std::string& name, uint16_t value) { variables[name] = value; }
+        if (it != variables.end()) {
+            return it->second;
+        }
 
+        // Check if we can add a new variable
+        if (variables.size() >= MAX_VARIABLES) {
+            std::cerr << "\033[31m[ERROR] Symbol table full - cannot create variable '"
+                << name << "' (max " << MAX_VARIABLES << " variables)\033[0m\n";
+            return 0;
+        }
+
+        // Auto-declare with 0
+        variables[name] = 0;
+        return 0;
+    }
+
+
+    void setVariable(const std::string& name, uint16_t value) {
+        if (variables.find(name) == variables.end() && variables.size() >= MAX_VARIABLES) {
+            std::cerr << "\033[31m[ERROR] Symbol table full - cannot create variable '"
+                << name << "' (max " << MAX_VARIABLES << " variables)\033[0m\n";
+            return;
+        }
+        variables[name] = value;
+    }
     // Sleep
     void setSleep(int cycles) { sleepCycles = cycles; }
     bool isSleeping() const { return sleepCycles > 0; }
