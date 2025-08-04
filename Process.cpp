@@ -27,7 +27,8 @@ Process::Process(const std::string& pname, int commands, size_t processMemory)
     core_id(-1),
     processMemory(processMemory),
     start_time(system_clock::now()),
-    current_instruction(0)
+    current_instruction(0),
+    pagingAllocator(nullptr)
 {
     lock_guard<mutex> lock(id_mutex);
     process_id = next_process_id++;
@@ -69,7 +70,8 @@ Process::Process(const std::string& pname,
     current_instruction(0),
     instructions(instrs),
     pageSize(memoryPerFrame),
-    numPages((processMemory + memoryPerFrame - 1) / memoryPerFrame)
+    numPages((processMemory + memoryPerFrame - 1) / memoryPerFrame),
+    pagingAllocator(nullptr)
 {
     lock_guard<mutex> lock(id_mutex);
     process_id = next_process_id++;
@@ -155,6 +157,19 @@ void Process::displayProcess() const {
     displayProcess(std::cout);     // call the 1-arg overload
 }
 
+// for backing store
+std::vector<uint16_t> Process::getPageData(size_t page_number) const {
+    std::vector<uint16_t> data;
+    size_t start_addr = page_number * pageSize;
+    size_t end_addr = start_addr + pageSize;
+
+    for (size_t addr = start_addr; addr < end_addr; addr += 2) {
+        uint16_t value = context->readMemory(static_cast<uint16_t>(addr));
+        data.push_back(value);
+    }
+    return data;
+}
+
 /*
  * Helper: ensure a given logical address is resident in our page table.
  * Lightweight “lazy map” for now.
@@ -162,108 +177,133 @@ void Process::displayProcess() const {
 void Process::ensureResident(uint16_t address) {
     if (pageSize == 0 || numPages == 0) return;
 
-    // Correct structured binding (pair<size_t,size_t>)
     auto [page_number, offset] = getPageAndOffset(address);
-    (void)offset;
-
-    // page_table is unordered_map<size_t, Page>
     auto it = page_table.find(page_number);
+
     if (it == page_table.end()) {
         Page p{};
-        p.page_number = page_number;  // size_t
+        p.page_number = page_number;
         p.frame_number = -1;
         p.inMemory = false;
         p.swapped = false;
-        it = page_table.emplace(page_number, p).first; // OK: key is size_t
+        it = page_table.emplace(page_number, p).first;
     }
 
     Page& pg = it->second;
     if (!pg.inMemory) {
-        pg.frame_number = static_cast<int>(page_number % 1024); // placeholder
-        pg.inMemory = true;
-        pg.swapped = false;
+        if (pg.swapped) {
+            // Load from backing store
+            auto pageData = pagingAllocator->readFromBackingStore(process_id, page_number);
+            // Restore to memory
+            size_t start_addr = page_number * pageSize;
+            for (size_t i = 0; i < pageData.size(); i++) {
+                context->writeMemory(static_cast<uint16_t>(start_addr + i * 2), pageData[i]);
+            }
+        }
+
+        // Allocate frame
+        pagingAllocator->allocate(shared_from_this(), page_number);
 
         if (log_file && log_file->is_open()) {
             *log_file << "    [paging] mapped page " << page_number
                 << " -> frame " << pg.frame_number << "\n";
         }
+
+        cout << "Page fault: PID " << process_id << " Page " << page_number << endl;
+    }
+    else {
+        pagingAllocator->updateLruPosition(pg.frame_number);
+        cout << "Page hit: PID " << process_id << " Page " << page_number << endl;
     }
 }
 
 bool Process::executeCommand(int coreId) {
-    if (isFinished()) return true;
+    try {
 
-    core_id = coreId;
-    context->incrementCycle();
+        if (isFinished()) return true;
 
-    if (current_instruction < instructions.size()) {
-        auto instr = instructions[current_instruction];
-        if (instr->memoryAccessed()) {
-            uint16_t address = 0;
-            if (auto rd = dynamic_cast<ReadInstruction*>(instr.get())) {
-                address = rd->getMemoryAddress();
+        core_id = coreId;
+        context->incrementCycle();
+
+        if (current_instruction < instructions.size()) {
+            auto instr = instructions[current_instruction];
+            if (instr->memoryAccessed()) {
+                uint16_t address = 0;
+                if (auto rd = dynamic_cast<ReadInstruction*>(instr.get())) {
+                    address = rd->getMemoryAddress();
+                }
+                else if (auto wr = dynamic_cast<WriteInstruction*>(instr.get())) {
+                    address = wr->getMemoryAddress();
+                }
+                ensureResident(address);
             }
-            else if (auto wr = dynamic_cast<WriteInstruction*>(instr.get())) {
-                address = wr->getMemoryAddress();
+        }
+
+        if (context->isSleeping()) {
+            context->decrementSleep();
+
+            auto now = system_clock::now();
+            time_t t = system_clock::to_time_t(now);
+            tm timeinfo;
+            localtime_s(&timeinfo, &t);
+
+            std::lock_guard<std::mutex> lock(log_mutex);
+            if (log_file && log_file->is_open()) {
+                *log_file
+                    << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
+                    << "Core:" << coreId << " Process sleeping..."
+                    << std::endl;
             }
-            ensureResident(address);
+            return true;
+        }
+
+        if (current_instruction < instructions.size()) {
+            bool done = instructions[current_instruction]->execute(*context);
+
+            auto now = system_clock::now();
+            time_t t = system_clock::to_time_t(now);
+            tm timeinfo;
+            localtime_s(&timeinfo, &t);
+
+            std::lock_guard<std::mutex> lock(log_mutex);
+            if (log_file && log_file->is_open()) {
+                *log_file
+                    << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
+                    << "Core:" << coreId << " Executing: "
+                    << instructions[current_instruction]->toString()
+                    << std::endl;
+
+                const auto& outputs = context->getOutputBuffer();
+                for (const auto& msg : outputs) {
+                    std::ostringstream line;
+                    line << "\x1b[33m(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p")
+                        << ")\x1b[0m ";
+                    line << "\x1b[36mCore:" << coreId << "\x1b[0m ";
+                    line << "\x1b[32m\"" << msg << "\"\x1b[0m";
+
+                    *log_file << "    Output: " << line.str() << std::endl;
+                    addOutput(line.str());
+                }
+                context->clearOutputBuffer();
+            }
+
+            if (done) {
+                executed_commands++;
+                current_instruction++;
+            }
         }
     }
-
-    if (context->isSleeping()) {
-        context->decrementSleep();
-
-        auto now = system_clock::now();
-        time_t t = system_clock::to_time_t(now);
-        tm timeinfo;
-        localtime_s(&timeinfo, &t);
-
-        std::lock_guard<std::mutex> lock(log_mutex);
+    catch (const std::exception& e) {  // Fix: Use 'e' variable
+        // Handle memory access violations
+        std::string error = "Process " + name + " shut down due to error: " + e.what();
         if (log_file && log_file->is_open()) {
-            *log_file
-                << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
-                << "Core:" << coreId << " Process sleeping..."
-                << std::endl;
+            *log_file << error << "\n";
         }
-        return true;
-    }
-
-    if (current_instruction < instructions.size()) {
-        bool done = instructions[current_instruction]->execute(*context);
-
-        auto now = system_clock::now();
-        time_t t = system_clock::to_time_t(now);
-        tm timeinfo;
-        localtime_s(&timeinfo, &t);
-
-        std::lock_guard<std::mutex> lock(log_mutex);
-        if (log_file && log_file->is_open()) {
-            *log_file
-                << "(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") "
-                << "Core:" << coreId << " Executing: "
-                << instructions[current_instruction]->toString()
-                << std::endl;
-
-            const auto& outputs = context->getOutputBuffer();
-            for (const auto& msg : outputs) {
-                std::ostringstream line;
-                line << "\x1b[33m(" << std::put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p")
-                    << ")\x1b[0m ";
-                line << "\x1b[36mCore:" << coreId << "\x1b[0m ";
-                line << "\x1b[32m\"" << msg << "\"\x1b[0m";
-
-                *log_file << "    Output: " << line.str() << std::endl;
-                addOutput(line.str());
-            }
-            context->clearOutputBuffer();
-        }
-
-        if (done) {
-            executed_commands++;
-            current_instruction++;
-        }
+        executed_commands = total_commands;
+        throw std::runtime_error(error);
     }
     return true;
+
 }
 
 bool Process::isFinished() const {

@@ -2,5 +2,5 @@ num-cpu           2
 quantum-cycles    0          # keep FCFS for now; or set RR + a quantum if you want
 delay-per-exec    50         # <-- slow each instruction down so you can see activity
 batch-process-freq 1
-min-ins           800
-max-ins           1200
+min-ins           1
+max-ins           1

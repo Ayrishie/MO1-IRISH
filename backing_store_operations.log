@@ -1,0 +1,596 @@
+[2025-08-04 20:48:26] === Backing Store Initialized ===
+[2025-08-04 20:48:26] Config: 8 frames, 64 bytes/frame
+[2025-08-04 20:51:10] Evicting frame 0 from PID 0
+[2025-08-04 20:51:10] Wrote page 0 for PID 0 (0 words)
+[2025-08-04 20:51:10] Page 0 written to backing store
+[2025-08-04 20:51:10] Evicting frame 1 from PID 1
+[2025-08-04 20:51:10] Wrote page 0 for PID 1 (0 words)
+[2025-08-04 20:51:10] Page 0 written to backing store
+[2025-08-04 20:51:10] Evicting frame 2 from PID 2
+[2025-08-04 20:51:10] Wrote page 0 for PID 2 (0 words)
+[2025-08-04 20:51:10] Page 0 written to backing store
+[2025-08-04 20:51:10] Evicting frame 3 from PID 3
+[2025-08-04 20:51:10] Wrote page 0 for PID 3 (0 words)
+[2025-08-04 20:51:10] Page 0 written to backing store
+[2025-08-04 20:51:10] Evicting frame 4 from PID 4
+[2025-08-04 20:51:10] Wrote page 0 for PID 4 (0 words)
+[2025-08-04 20:51:10] Page 0 written to backing store
+[2025-08-04 20:51:10] Evicting frame 5 from PID 5
+[2025-08-04 20:51:10] Wrote page 0 for PID 5 (0 words)
+[2025-08-04 20:51:10] Page 0 written to backing store
+[2025-08-04 20:51:10] Evicting frame 6 from PID 6
+[2025-08-04 20:51:10] Wrote page 0 for PID 6 (0 words)
+[2025-08-04 20:51:10] Page 0 written to backing store
+[2025-08-04 20:51:10] Evicting frame 7 from PID 7
+[2025-08-04 20:51:10] Wrote page 0 for PID 7 (0 words)
+[2025-08-04 20:51:10] Page 0 written to backing store
+[2025-08-04 20:51:10] Evicting frame 0 from PID 8
+[2025-08-04 20:51:10] Wrote page 0 for PID 8 (0 words)
+[2025-08-04 20:51:10] Page 0 written to backing store
+[2025-08-04 20:51:10] Evicting frame 1 from PID 9
+[2025-08-04 20:51:10] Wrote page 0 for PID 9 (0 words)
+[2025-08-04 20:51:10] Page 0 written to backing store
+[2025-08-04 20:51:10] Evicting frame 2 from PID 10
+[2025-08-04 20:51:10] Wrote page 0 for PID 10 (0 words)
+[2025-08-04 20:51:10] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 3 from PID 11
+[2025-08-04 20:51:11] Wrote page 0 for PID 11 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 4 from PID 12
+[2025-08-04 20:51:11] Wrote page 0 for PID 12 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 5 from PID 13
+[2025-08-04 20:51:11] Wrote page 0 for PID 13 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 6 from PID 14
+[2025-08-04 20:51:11] Wrote page 0 for PID 14 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 7 from PID 15
+[2025-08-04 20:51:11] Wrote page 0 for PID 15 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 0 from PID 16
+[2025-08-04 20:51:11] Wrote page 0 for PID 16 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 1 from PID 17
+[2025-08-04 20:51:11] Wrote page 0 for PID 17 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 2 from PID 18
+[2025-08-04 20:51:11] Wrote page 0 for PID 18 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 3 from PID 19
+[2025-08-04 20:51:11] Wrote page 0 for PID 19 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 4 from PID 20
+[2025-08-04 20:51:11] Wrote page 0 for PID 20 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 5 from PID 21
+[2025-08-04 20:51:11] Wrote page 0 for PID 21 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 6 from PID 22
+[2025-08-04 20:51:11] Wrote page 0 for PID 22 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 7 from PID 23
+[2025-08-04 20:51:11] Wrote page 0 for PID 23 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 0 from PID 24
+[2025-08-04 20:51:11] Wrote page 0 for PID 24 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 1 from PID 25
+[2025-08-04 20:51:11] Wrote page 0 for PID 25 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:11] Evicting frame 2 from PID 26
+[2025-08-04 20:51:11] Wrote page 0 for PID 26 (0 words)
+[2025-08-04 20:51:11] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 3 from PID 27
+[2025-08-04 20:51:12] Wrote page 0 for PID 27 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 4 from PID 28
+[2025-08-04 20:51:12] Wrote page 0 for PID 28 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 5 from PID 29
+[2025-08-04 20:51:12] Wrote page 0 for PID 29 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 6 from PID 30
+[2025-08-04 20:51:12] Wrote page 0 for PID 30 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 7 from PID 31
+[2025-08-04 20:51:12] Wrote page 0 for PID 31 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 0 from PID 32
+[2025-08-04 20:51:12] Wrote page 0 for PID 32 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 1 from PID 33
+[2025-08-04 20:51:12] Wrote page 0 for PID 33 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 2 from PID 34
+[2025-08-04 20:51:12] Wrote page 0 for PID 34 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 3 from PID 35
+[2025-08-04 20:51:12] Wrote page 0 for PID 35 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 4 from PID 36
+[2025-08-04 20:51:12] Wrote page 0 for PID 36 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 5 from PID 37
+[2025-08-04 20:51:12] Wrote page 0 for PID 37 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 6 from PID 38
+[2025-08-04 20:51:12] Wrote page 0 for PID 38 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 7 from PID 39
+[2025-08-04 20:51:12] Wrote page 0 for PID 39 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 0 from PID 40
+[2025-08-04 20:51:12] Wrote page 0 for PID 40 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 1 from PID 41
+[2025-08-04 20:51:12] Wrote page 0 for PID 41 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:12] Evicting frame 2 from PID 42
+[2025-08-04 20:51:12] Wrote page 0 for PID 42 (0 words)
+[2025-08-04 20:51:12] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 3 from PID 43
+[2025-08-04 20:51:13] Wrote page 0 for PID 43 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 4 from PID 44
+[2025-08-04 20:51:13] Wrote page 0 for PID 44 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 5 from PID 45
+[2025-08-04 20:51:13] Wrote page 0 for PID 45 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 6 from PID 46
+[2025-08-04 20:51:13] Wrote page 0 for PID 46 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 7 from PID 47
+[2025-08-04 20:51:13] Wrote page 0 for PID 47 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 0 from PID 48
+[2025-08-04 20:51:13] Wrote page 0 for PID 48 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 1 from PID 49
+[2025-08-04 20:51:13] Wrote page 0 for PID 49 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 2 from PID 50
+[2025-08-04 20:51:13] Wrote page 0 for PID 50 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 3 from PID 51
+[2025-08-04 20:51:13] Wrote page 0 for PID 51 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 4 from PID 52
+[2025-08-04 20:51:13] Wrote page 0 for PID 52 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 5 from PID 53
+[2025-08-04 20:51:13] Wrote page 0 for PID 53 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 6 from PID 54
+[2025-08-04 20:51:13] Wrote page 0 for PID 54 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 7 from PID 55
+[2025-08-04 20:51:13] Wrote page 0 for PID 55 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 0 from PID 56
+[2025-08-04 20:51:13] Wrote page 0 for PID 56 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 1 from PID 57
+[2025-08-04 20:51:13] Wrote page 0 for PID 57 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 2 from PID 58
+[2025-08-04 20:51:13] Wrote page 0 for PID 58 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:13] Evicting frame 3 from PID 59
+[2025-08-04 20:51:13] Wrote page 0 for PID 59 (0 words)
+[2025-08-04 20:51:13] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 4 from PID 60
+[2025-08-04 20:51:14] Wrote page 0 for PID 60 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 5 from PID 61
+[2025-08-04 20:51:14] Wrote page 0 for PID 61 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 6 from PID 62
+[2025-08-04 20:51:14] Wrote page 0 for PID 62 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 7 from PID 63
+[2025-08-04 20:51:14] Wrote page 0 for PID 63 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 0 from PID 64
+[2025-08-04 20:51:14] Wrote page 0 for PID 64 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 1 from PID 65
+[2025-08-04 20:51:14] Wrote page 0 for PID 65 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 2 from PID 66
+[2025-08-04 20:51:14] Wrote page 0 for PID 66 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 3 from PID 67
+[2025-08-04 20:51:14] Wrote page 0 for PID 67 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 4 from PID 68
+[2025-08-04 20:51:14] Wrote page 0 for PID 68 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 5 from PID 69
+[2025-08-04 20:51:14] Wrote page 0 for PID 69 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 6 from PID 70
+[2025-08-04 20:51:14] Wrote page 0 for PID 70 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 7 from PID 71
+[2025-08-04 20:51:14] Wrote page 0 for PID 71 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 0 from PID 72
+[2025-08-04 20:51:14] Wrote page 0 for PID 72 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 1 from PID 73
+[2025-08-04 20:51:14] Wrote page 0 for PID 73 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 2 from PID 74
+[2025-08-04 20:51:14] Wrote page 0 for PID 74 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:14] Evicting frame 3 from PID 75
+[2025-08-04 20:51:14] Wrote page 0 for PID 75 (0 words)
+[2025-08-04 20:51:14] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 4 from PID 76
+[2025-08-04 20:51:15] Wrote page 0 for PID 76 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 5 from PID 77
+[2025-08-04 20:51:15] Wrote page 0 for PID 77 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 6 from PID 78
+[2025-08-04 20:51:15] Wrote page 0 for PID 78 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 7 from PID 79
+[2025-08-04 20:51:15] Wrote page 0 for PID 79 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 0 from PID 80
+[2025-08-04 20:51:15] Wrote page 0 for PID 80 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 1 from PID 81
+[2025-08-04 20:51:15] Wrote page 0 for PID 81 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 2 from PID 82
+[2025-08-04 20:51:15] Wrote page 0 for PID 82 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 3 from PID 83
+[2025-08-04 20:51:15] Wrote page 0 for PID 83 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 4 from PID 84
+[2025-08-04 20:51:15] Wrote page 0 for PID 84 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 5 from PID 85
+[2025-08-04 20:51:15] Wrote page 0 for PID 85 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 6 from PID 86
+[2025-08-04 20:51:15] Wrote page 0 for PID 86 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 7 from PID 87
+[2025-08-04 20:51:15] Wrote page 0 for PID 87 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 0 from PID 88
+[2025-08-04 20:51:15] Wrote page 0 for PID 88 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 1 from PID 89
+[2025-08-04 20:51:15] Wrote page 0 for PID 89 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 2 from PID 90
+[2025-08-04 20:51:15] Wrote page 0 for PID 90 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:15] Evicting frame 3 from PID 91
+[2025-08-04 20:51:15] Wrote page 0 for PID 91 (0 words)
+[2025-08-04 20:51:15] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 4 from PID 92
+[2025-08-04 20:51:16] Wrote page 0 for PID 92 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 5 from PID 93
+[2025-08-04 20:51:16] Wrote page 0 for PID 93 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 6 from PID 94
+[2025-08-04 20:51:16] Wrote page 0 for PID 94 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 7 from PID 95
+[2025-08-04 20:51:16] Wrote page 0 for PID 95 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 0 from PID 96
+[2025-08-04 20:51:16] Wrote page 0 for PID 96 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 1 from PID 97
+[2025-08-04 20:51:16] Wrote page 0 for PID 97 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 2 from PID 98
+[2025-08-04 20:51:16] Wrote page 0 for PID 98 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 3 from PID 99
+[2025-08-04 20:51:16] Wrote page 0 for PID 99 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 4 from PID 100
+[2025-08-04 20:51:16] Wrote page 0 for PID 100 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 5 from PID 101
+[2025-08-04 20:51:16] Wrote page 0 for PID 101 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 6 from PID 102
+[2025-08-04 20:51:16] Wrote page 0 for PID 102 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 7 from PID 103
+[2025-08-04 20:51:16] Wrote page 0 for PID 103 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 0 from PID 104
+[2025-08-04 20:51:16] Wrote page 0 for PID 104 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 1 from PID 105
+[2025-08-04 20:51:16] Wrote page 0 for PID 105 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 2 from PID 106
+[2025-08-04 20:51:16] Wrote page 0 for PID 106 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:16] Evicting frame 3 from PID 107
+[2025-08-04 20:51:16] Wrote page 0 for PID 107 (0 words)
+[2025-08-04 20:51:16] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 4 from PID 108
+[2025-08-04 20:51:17] Wrote page 0 for PID 108 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 5 from PID 109
+[2025-08-04 20:51:17] Wrote page 0 for PID 109 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 6 from PID 110
+[2025-08-04 20:51:17] Wrote page 0 for PID 110 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 7 from PID 111
+[2025-08-04 20:51:17] Wrote page 0 for PID 111 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 0 from PID 112
+[2025-08-04 20:51:17] Wrote page 0 for PID 112 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 1 from PID 113
+[2025-08-04 20:51:17] Wrote page 0 for PID 113 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 2 from PID 114
+[2025-08-04 20:51:17] Wrote page 0 for PID 114 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 3 from PID 115
+[2025-08-04 20:51:17] Wrote page 0 for PID 115 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 4 from PID 116
+[2025-08-04 20:51:17] Wrote page 0 for PID 116 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 5 from PID 117
+[2025-08-04 20:51:17] Wrote page 0 for PID 117 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 6 from PID 118
+[2025-08-04 20:51:17] Wrote page 0 for PID 118 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 7 from PID 119
+[2025-08-04 20:51:17] Wrote page 0 for PID 119 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 0 from PID 120
+[2025-08-04 20:51:17] Wrote page 0 for PID 120 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 1 from PID 121
+[2025-08-04 20:51:17] Wrote page 0 for PID 121 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 2 from PID 122
+[2025-08-04 20:51:17] Wrote page 0 for PID 122 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:17] Evicting frame 3 from PID 123
+[2025-08-04 20:51:17] Wrote page 0 for PID 123 (0 words)
+[2025-08-04 20:51:17] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 4 from PID 124
+[2025-08-04 20:51:18] Wrote page 0 for PID 124 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 5 from PID 125
+[2025-08-04 20:51:18] Wrote page 0 for PID 125 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 6 from PID 126
+[2025-08-04 20:51:18] Wrote page 0 for PID 126 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 7 from PID 127
+[2025-08-04 20:51:18] Wrote page 0 for PID 127 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 0 from PID 128
+[2025-08-04 20:51:18] Wrote page 0 for PID 128 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 1 from PID 129
+[2025-08-04 20:51:18] Wrote page 0 for PID 129 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 2 from PID 130
+[2025-08-04 20:51:18] Wrote page 0 for PID 130 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 3 from PID 131
+[2025-08-04 20:51:18] Wrote page 0 for PID 131 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 4 from PID 132
+[2025-08-04 20:51:18] Wrote page 0 for PID 132 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 5 from PID 133
+[2025-08-04 20:51:18] Wrote page 0 for PID 133 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 6 from PID 134
+[2025-08-04 20:51:18] Wrote page 0 for PID 134 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 7 from PID 135
+[2025-08-04 20:51:18] Wrote page 0 for PID 135 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 0 from PID 136
+[2025-08-04 20:51:18] Wrote page 0 for PID 136 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 1 from PID 137
+[2025-08-04 20:51:18] Wrote page 0 for PID 137 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 2 from PID 138
+[2025-08-04 20:51:18] Wrote page 0 for PID 138 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:18] Evicting frame 3 from PID 139
+[2025-08-04 20:51:18] Wrote page 0 for PID 139 (0 words)
+[2025-08-04 20:51:18] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 4 from PID 140
+[2025-08-04 20:51:19] Wrote page 0 for PID 140 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 5 from PID 141
+[2025-08-04 20:51:19] Wrote page 0 for PID 141 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 6 from PID 142
+[2025-08-04 20:51:19] Wrote page 0 for PID 142 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 7 from PID 143
+[2025-08-04 20:51:19] Wrote page 0 for PID 143 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 0 from PID 144
+[2025-08-04 20:51:19] Wrote page 0 for PID 144 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 1 from PID 145
+[2025-08-04 20:51:19] Wrote page 0 for PID 145 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 2 from PID 146
+[2025-08-04 20:51:19] Wrote page 0 for PID 146 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 3 from PID 147
+[2025-08-04 20:51:19] Wrote page 0 for PID 147 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 4 from PID 148
+[2025-08-04 20:51:19] Wrote page 0 for PID 148 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 5 from PID 149
+[2025-08-04 20:51:19] Wrote page 0 for PID 149 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 6 from PID 150
+[2025-08-04 20:51:19] Wrote page 0 for PID 150 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 7 from PID 151
+[2025-08-04 20:51:19] Wrote page 0 for PID 151 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 0 from PID 152
+[2025-08-04 20:51:19] Wrote page 0 for PID 152 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 1 from PID 153
+[2025-08-04 20:51:19] Wrote page 0 for PID 153 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 2 from PID 154
+[2025-08-04 20:51:19] Wrote page 0 for PID 154 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:19] Evicting frame 3 from PID 155
+[2025-08-04 20:51:19] Wrote page 0 for PID 155 (0 words)
+[2025-08-04 20:51:19] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 4 from PID 156
+[2025-08-04 20:51:20] Wrote page 0 for PID 156 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 5 from PID 157
+[2025-08-04 20:51:20] Wrote page 0 for PID 157 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 6 from PID 158
+[2025-08-04 20:51:20] Wrote page 0 for PID 158 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 7 from PID 159
+[2025-08-04 20:51:20] Wrote page 0 for PID 159 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 0 from PID 160
+[2025-08-04 20:51:20] Wrote page 0 for PID 160 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 1 from PID 161
+[2025-08-04 20:51:20] Wrote page 0 for PID 161 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 2 from PID 162
+[2025-08-04 20:51:20] Wrote page 0 for PID 162 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 3 from PID 163
+[2025-08-04 20:51:20] Wrote page 0 for PID 163 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 4 from PID 164
+[2025-08-04 20:51:20] Wrote page 0 for PID 164 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 5 from PID 165
+[2025-08-04 20:51:20] Wrote page 0 for PID 165 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 6 from PID 166
+[2025-08-04 20:51:20] Wrote page 0 for PID 166 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 7 from PID 167
+[2025-08-04 20:51:20] Wrote page 0 for PID 167 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 0 from PID 168
+[2025-08-04 20:51:20] Wrote page 0 for PID 168 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 1 from PID 169
+[2025-08-04 20:51:20] Wrote page 0 for PID 169 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 2 from PID 170
+[2025-08-04 20:51:20] Wrote page 0 for PID 170 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:20] Evicting frame 3 from PID 171
+[2025-08-04 20:51:20] Wrote page 0 for PID 171 (0 words)
+[2025-08-04 20:51:20] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 4 from PID 172
+[2025-08-04 20:51:21] Wrote page 0 for PID 172 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 5 from PID 173
+[2025-08-04 20:51:21] Wrote page 0 for PID 173 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 6 from PID 174
+[2025-08-04 20:51:21] Wrote page 0 for PID 174 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 7 from PID 175
+[2025-08-04 20:51:21] Wrote page 0 for PID 175 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 0 from PID 176
+[2025-08-04 20:51:21] Wrote page 0 for PID 176 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 1 from PID 177
+[2025-08-04 20:51:21] Wrote page 0 for PID 177 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 2 from PID 178
+[2025-08-04 20:51:21] Wrote page 0 for PID 178 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 3 from PID 179
+[2025-08-04 20:51:21] Wrote page 0 for PID 179 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 4 from PID 180
+[2025-08-04 20:51:21] Wrote page 0 for PID 180 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 5 from PID 181
+[2025-08-04 20:51:21] Wrote page 0 for PID 181 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 6 from PID 182
+[2025-08-04 20:51:21] Wrote page 0 for PID 182 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 7 from PID 183
+[2025-08-04 20:51:21] Wrote page 0 for PID 183 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 0 from PID 184
+[2025-08-04 20:51:21] Wrote page 0 for PID 184 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 1 from PID 185
+[2025-08-04 20:51:21] Wrote page 0 for PID 185 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 2 from PID 186
+[2025-08-04 20:51:21] Wrote page 0 for PID 186 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:21] Evicting frame 3 from PID 187
+[2025-08-04 20:51:21] Wrote page 0 for PID 187 (0 words)
+[2025-08-04 20:51:21] Page 0 written to backing store
+[2025-08-04 20:51:22] Evicting frame 4 from PID 188
+[2025-08-04 20:51:22] Wrote page 0 for PID 188 (0 words)
+[2025-08-04 20:51:22] Page 0 written to backing store
+[2025-08-04 20:51:22] Evicting frame 5 from PID 189
+[2025-08-04 20:51:22] Wrote page 0 for PID 189 (0 words)
+[2025-08-04 20:51:22] Page 0 written to backing store
+[2025-08-04 20:51:22] Evicting frame 6 from PID 190
+[2025-08-04 20:51:22] Wrote page 0 for PID 190 (0 words)
+[2025-08-04 20:51:22] Page 0 written to backing store
+[2025-08-04 20:51:22] Evicting frame 7 from PID 191
+[2025-08-04 20:51:22] Wrote page 0 for PID 191 (0 words)
+[2025-08-04 20:51:22] Page 0 written to backing store
+[2025-08-04 20:51:22] Evicting frame 0 from PID 192
+[2025-08-04 20:51:22] Wrote page 0 for PID 192 (0 words)
+[2025-08-04 20:51:22] Page 0 written to backing store
+[2025-08-04 20:51:22] Evicting frame 1 from PID 193
+[2025-08-04 20:51:22] Wrote page 0 for PID 193 (0 words)
+[2025-08-04 20:51:22] Page 0 written to backing store
+[2025-08-04 20:51:22] Evicting frame 2 from PID 194
+[2025-08-04 20:51:22] Wrote page 0 for PID 194 (0 words)
+[2025-08-04 20:51:22] Page 0 written to backing store
+[2025-08-04 20:51:22] Evicting frame 3 from PID 195
+[2025-08-04 20:51:22] Wrote page 0 for PID 195 (0 words)
+[2025-08-04 20:51:22] Page 0 written to backing store
+[2025-08-04 20:51:22] Evicting frame 4 from PID 196
+[2025-08-04 20:51:22] Wrote page 0 for PID 196 (0 words)
+[2025-08-04 20:51:22] Page 0 written to backing store
+[2025-08-04 20:51:22] Evicting frame 5 from PID 197
+[2025-08-04 20:51:22] Wrote page 0 for PID 197 (0 words)
+[2025-08-04 20:51:22] Page 0 written to backing store

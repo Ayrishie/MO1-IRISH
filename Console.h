@@ -12,6 +12,7 @@
 #include "RRScheduler.h"
 #include "FCFSScheduler.h"
 #include "MemoryAllocator.h"
+#include "ProcessManager.h"
 
 class Console {
 private:
@@ -54,6 +55,9 @@ private:
     void handlePrintInstruction(const std::string& line,
         std::vector<std::shared_ptr<Instruction>>& parsedInstructions);
     int  generateProcessSize();
+
+    // backingStore
+    ProcessManager processManager;
 
 public:
     Console();

@@ -127,6 +127,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PagingAllocator.cpp" />
     <ClCompile Include="Process.cpp" />
+    <ClCompile Include="ProcessManager.cpp" />
     <ClCompile Include="RRScheduler.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -139,11 +140,12 @@
     <ClInclude Include="InstructionGenerator.h" />
     <ClInclude Include="MemoryAllocator.h" />
     <ClInclude Include="Process.h" />
+    <ClInclude Include="ProcessManager.h" />
     <ClInclude Include="RRScheduler.h" />
     <ClInclude Include="Scheduler.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Config.txt" />
+    <Text Include="config.txt" />
     <Text Include="csopesy-log.txt" />
   </ItemGroup>
   <ItemGroup>

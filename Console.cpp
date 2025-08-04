@@ -1,5 +1,7 @@
 ﻿// Console.cpp — includes for everything you use in here
 #include "Console.h"          // your class declaration
+#include "Process.h"         
+#include "ProcessManager.h"   
 #include <cstdlib>            // system()
 #include <iostream>           // cout, cerr
 #include <fstream>            // ifstream, ofstream
@@ -8,6 +10,7 @@
 #include <iomanip>            // put_time
 #include <algorithm>          // remove
 #include <random>             // random_device, mt19937, uniform_int_distribution
+
 
 // filesystem support (works both on GCC/Clang and MSVC)
 #if defined(_MSC_VER) && defined(_MSVC_LANG) && _MSVC_LANG >= 201703L
@@ -113,16 +116,16 @@ void Console::initialize() {
     cpuCount = 1;
     timeQuantum = 0;
     batchProcessFreq = 1;
-    minInstructions = 1000;
-    maxInstructions = 2000;
-    delayPerExecution = 0;
+    minInstructions = 10;
+    maxInstructions = 20;
+    delayPerExecution = 100;
     schedulerType = "fcfs";
 
     // Sensible memory defaults (powers of two)
-    maxOverallMem = 16 * 1024; // 16384 bytes
+    maxOverallMem = 512;
     memPerFrame = 64;        // bytes per frame
-    minMemPerProc = 64;        // bytes
-    maxMemPerProc = 512;       // bytes
+    minMemPerProc = 128;        // bytes
+    maxMemPerProc = 128;       // bytes
 
     // Ensure the log directory exists (create if missing)
     if (!fs::exists(logDir)) {
@@ -202,7 +205,10 @@ void Console::initialize() {
     // -------------------------
     // Initialize paging allocator and schedulers
     // -------------------------
-    pagingAllocator = std::make_unique<PagingAllocator>(maxOverallMem, memPerFrame);
+    pagingAllocator = std::make_unique<PagingAllocator>(
+        maxOverallMem,
+        memPerFrame,
+        processManager);
 
     std::cout << "\033[32m";
     std::cout << "===============================\n";
@@ -346,7 +352,7 @@ void Console::schedulerStart() {
                 }
                 if (active >= ACTIVE_CAP) {
                     // Too many in-flight; skip creating this tick
-                    continue;
+                    return;
                 }
 
                 // Create a new process
@@ -370,6 +376,8 @@ void Console::schedulerStart() {
                 else {
                     fcfsScheduler->addProcess(process);
                 }
+
+                processManager.addProcess(process);
             }
 
             // Optional snapshot cadence if you later hook it up

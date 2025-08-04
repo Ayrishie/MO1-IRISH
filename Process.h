@@ -24,7 +24,7 @@ struct Page {
 
 class PagingAllocator; // forward declaration
 
-class Process {
+class Process : public std::enable_shared_from_this<Process> {
     friend class PagingAllocator;  // allow PagingAllocator to access paging internals
 
 private:
@@ -48,6 +48,9 @@ private:
     // map a 16-bit address to (page, offset)
     std::pair<size_t, size_t> getPageAndOffset(uint16_t addr) const;
     void ensureResident(uint16_t address);
+
+    // for backing store
+    PagingAllocator* pagingAllocator;
 
 
 public:
@@ -82,8 +85,6 @@ public:
 
     void displayProcess(std::ostream& out) const; 
        
-
-
     bool        executeCommand(int coreId);
 
     void setInstructions(const std::vector<std::shared_ptr<Instruction>>& instrs);
@@ -101,6 +102,10 @@ public:
     }
     std::vector<std::string> getRecentOutputs() const { return outputBuffer; }
     void clearRecentOutputs() { outputBuffer.clear(); }
+
+    // for backing store
+    std::vector<uint16_t> getPageData(size_t page_number) const;
+    void setPagingAllocator(PagingAllocator* allocator) { pagingAllocator = allocator; }
 };
 
 #endif // PROCESS_H
