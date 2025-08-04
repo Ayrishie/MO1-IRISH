@@ -4,7 +4,7 @@
 int main() {
     Console console;
 
-    console.header();
+    console.header();   
     console.start();
 
     return 0;

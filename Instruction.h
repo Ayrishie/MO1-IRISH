@@ -7,267 +7,373 @@
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
+#include <sstream>
+#include "MemoryAllocator.h"
+
+// 0=PRINT, 1=DECLARE, 2=ADD, 3=SUBTRACT, 4=SLEEP, 5=FOR, 6=READ, 7=WRITE
+#define PRINT     0
+#define DECLARE   1
+#define ADD       2
+#define SUBTRACT  3
+#define SLEEP     4
+#define FOR       5
+#define READ      6
+#define WRITE     7
 
 // Forward declaration
 class ProcessContext;
 
-// Base instruction interface
+// --- DEBUG helper: escape non-printables for logs (TEMPORARY) ---
+inline std::string dbgEscape(const std::string& s) {
+    std::string out;
+    out.reserve(s.size() * 2);
+    for (unsigned char c : s) {
+        switch (c) {
+        case '\0': out += "\\0"; break;
+        case '\n': out += "\\n"; break;
+        case '\t': out += "\\t"; break;
+        case '\\': out += "\\\\"; break;
+        case '\"': out += "\\\""; break;
+        default:   out += static_cast<char>(c); break;
+        }
+    }
+    return out;
+}
+
+
+// -------------------- helpers --------------------
+
+inline std::string trimVar(std::string s) {
+    auto sp = [](unsigned char c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; };
+    while (!s.empty() && sp((unsigned char)s.front())) s.erase(s.begin());
+    while (!s.empty() && sp((unsigned char)s.back()))  s.pop_back();
+    return s;
+}
+
+// Unescape \" \\ \n \t and strip wrapping quotes, then trim
+inline std::string unescapeAndStripQuotes(std::string s) {
+    std::string out;
+    out.reserve(s.size());
+    for (size_t i = 0; i < s.size(); ++i) {
+        char c = s[i];
+        if (c == '\\' && i + 1 < s.size()) {
+            char n = s[++i];
+            switch (n) {
+            case '\\': out.push_back('\\'); break;
+            case '"':  out.push_back('"');  break;
+            case 'n':  out.push_back('\n'); break;
+            case 't':  out.push_back('\t'); break;
+            default:   out.push_back(n);    break;
+            }
+        }
+        else {
+            out.push_back(c);
+        }
+    }
+    if (out.size() >= 2 && out.front() == '"' && out.back() == '"') {
+        out = out.substr(1, out.size() - 2);
+    }
+    return trimVar(std::move(out));
+}
+
+// -------------------- base instruction --------------------
+
 class Instruction {
+protected:
+    int type;
 public:
     virtual ~Instruction() = default;
-    virtual bool execute(ProcessContext& context) = 0;  // Returns true if instruction completed
+    virtual bool execute(ProcessContext& context) = 0;  // returns true if instruction completed
     virtual std::string toString() const = 0;
-    virtual int getExecutionCycles() const { return 1; }  // Default: 1 cycle per instruction
+    virtual int getExecutionCycles() const { return 1; }
+    virtual int getInstructionType() const { return type; }
+    virtual bool memoryAccessed() const { return false; }
 };
 
-// Process context to hold variables and state
+// -------------------- process context --------------------
+
 class ProcessContext {
 private:
-    std::unordered_map<std::string, uint16_t> variables;
+    std::unordered_map<std::string, uint16_t> variables; // symbol table
     std::string processName;
     int currentCycle;
     int sleepCycles;
-    std::vector<std::string> outputBuffer;  // To store PRINT outputs
-
+    std::vector<std::string> outputBuffer;                // PRINT outputs
+    std::unordered_map<uint16_t, uint16_t> memory;        // simulated memory
 public:
-    ProcessContext(const std::string& name) : processName(name), currentCycle(0), sleepCycles(0) {}
+    ProcessContext(const std::string& name)
+        : processName(name), currentCycle(0), sleepCycles(0) {
+    }
 
-    // Variable management
     uint16_t getVariable(const std::string& name) {
         auto it = variables.find(name);
-        return (it != variables.end()) ? it->second : 0;  // Auto-declare with 0 if not found
+        return (it != variables.end()) ? it->second : 0;   // auto-declare with 0
     }
+    void setVariable(const std::string& name, uint16_t value) { variables[name] = value; }
 
-    void setVariable(const std::string& name, uint16_t value) {
-        variables[name] = value;
-    }
-
-    // Sleep management
+    // Sleep
     void setSleep(int cycles) { sleepCycles = cycles; }
     bool isSleeping() const { return sleepCycles > 0; }
-    void decrementSleep() { if (sleepCycles > 0) sleepCycles--; }
+    void decrementSleep() { if (sleepCycles > 0) --sleepCycles; }
 
-    // Output management
+    // Output
     void addOutput(const std::string& output) { outputBuffer.push_back(output); }
     const std::vector<std::string>& getOutputBuffer() const { return outputBuffer; }
     void clearOutputBuffer() { outputBuffer.clear(); }
 
-    // Getters
+    // Cycles
     const std::string& getProcessName() const { return processName; }
     int getCurrentCycle() const { return currentCycle; }
-    void incrementCycle() { currentCycle++; }
+    void incrementCycle() { ++currentCycle; }
+
+    // Memory
+    void writeMemory(uint16_t address, uint16_t value) { memory[address] = value; }
+    uint16_t readMemory(uint16_t address) const {
+        auto it = memory.find(address);
+        return (it != memory.end()) ? it->second : 0;
+    }
 };
 
-// PRINT instruction
+// -------------------- PRINT --------------------
+
 class PrintInstruction : public Instruction {
 private:
     std::string message;
-    std::string variable;  // Optional variable to print
+    std::string variable;   // optional variable to append
     bool hasVariable;
-
 public:
-    PrintInstruction(const std::string& msg) : message(msg), hasVariable(false) {}
+    // print("literal")
+    PrintInstruction(const std::string& msg)
+        : message(unescapeAndStripQuotes(msg)), hasVariable(false) {
+        type = PRINT;
+    }
+    // print("literal" + var)
     PrintInstruction(const std::string& msg, const std::string& var)
-        : message(msg), variable(var), hasVariable(true) {
+        : message(unescapeAndStripQuotes(msg)),
+        variable(trimVar(var)),
+        hasVariable(true) {
+        type = PRINT;
     }
 
     bool execute(ProcessContext& context) override {
-        std::string output;
+        // TEMP DEBUG: show exactly what message and variable look like here
         if (hasVariable) {
             uint16_t value = context.getVariable(variable);
-            output = message + std::to_string(value);
+            context.addOutput(std::string("[DBG] msg=") + dbgEscape(message)
+                + ", var=" + variable
+                + ", val=" + std::to_string(value));
+            // normal output
+            context.addOutput(message + std::to_string(value));
         }
         else {
-            output = message;
+            context.addOutput(std::string("[DBG] msg=") + dbgEscape(message));
+            context.addOutput(message);
         }
-        context.addOutput(output);
-        return true;  // Always completes in one cycle
+        return true;
     }
 
+
     std::string toString() const override {
-        if (hasVariable) {
-            return "PRINT(\"" + message + "\" + " + variable + ")";
-        }
+        if (hasVariable) return "PRINT(\"" + message + "\" + " + variable + ")";
         return "PRINT(\"" + message + "\")";
     }
 };
 
-// DECLARE instruction
+// -------------------- DECLARE --------------------
+
 class DeclareInstruction : public Instruction {
 private:
     std::string variableName;
     uint16_t value;
-
 public:
     DeclareInstruction(const std::string& var, uint16_t val)
-        : variableName(var), value(val) {
+        : variableName(trimVar(var)), value(val) {
+        type = DECLARE;
     }
-
     bool execute(ProcessContext& context) override {
         context.setVariable(variableName, value);
         return true;
     }
-
     std::string toString() const override {
         return "DECLARE(" + variableName + ", " + std::to_string(value) + ")";
     }
 };
 
-// ADD instruction
+// -------------------- ADD --------------------
+
 class AddInstruction : public Instruction {
 private:
     std::string result;
     std::string operand1;
     std::string operand2;
-    bool op1IsValue;
-    bool op2IsValue;
-    uint16_t op1Value;
-    uint16_t op2Value;
-
+    bool op1IsValue = false;
+    bool op2IsValue = false;
+    uint16_t op1Value = 0;
+    uint16_t op2Value = 0;
 public:
     AddInstruction(const std::string& res, const std::string& op1, const std::string& op2)
-        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false) {
+        : result(trimVar(res)), operand1(trimVar(op1)), operand2(trimVar(op2)) {
+        type = ADD;
     }
-
     AddInstruction(const std::string& res, const std::string& op1, uint16_t op2)
-        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true) {
+        : result(trimVar(res)), operand1(trimVar(op1)), op2IsValue(true), op2Value(op2) {
+        type = ADD;
     }
-
     AddInstruction(const std::string& res, uint16_t op1, const std::string& op2)
-        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false) {
+        : result(trimVar(res)), operand2(trimVar(op2)), op1IsValue(true), op1Value(op1) {
+        type = ADD;
     }
-
     AddInstruction(const std::string& res, uint16_t op1, uint16_t op2)
-        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true) {
+        : result(trimVar(res)), op1IsValue(true), op2IsValue(true), op1Value(op1), op2Value(op2) {
+        type = ADD;
     }
 
     bool execute(ProcessContext& context) override {
-        uint16_t val1 = op1IsValue ? op1Value : context.getVariable(operand1);
-        uint16_t val2 = op2IsValue ? op2Value : context.getVariable(operand2);
-
-        // Perform addition with overflow protection
-        uint32_t sum = static_cast<uint32_t>(val1) + static_cast<uint32_t>(val2);
-        uint16_t resultValue = (sum > UINT16_MAX) ? UINT16_MAX : static_cast<uint16_t>(sum);
-
-        context.setVariable(result, resultValue);
+        uint16_t v1 = op1IsValue ? op1Value : context.getVariable(operand1);
+        uint16_t v2 = op2IsValue ? op2Value : context.getVariable(operand2);
+        uint32_t sum = static_cast<uint32_t>(v1) + static_cast<uint32_t>(v2);
+        uint16_t rv = (sum > UINT16_MAX) ? UINT16_MAX : static_cast<uint16_t>(sum);
+        context.setVariable(result, rv);
         return true;
     }
-
     std::string toString() const override {
-        std::string op1Str = op1IsValue ? std::to_string(op1Value) : operand1;
-        std::string op2Str = op2IsValue ? std::to_string(op2Value) : operand2;
-        return "ADD(" + result + ", " + op1Str + ", " + op2Str + ")";
+        std::string a = op1IsValue ? std::to_string(op1Value) : operand1;
+        std::string b = op2IsValue ? std::to_string(op2Value) : operand2;
+        return "ADD(" + result + ", " + a + ", " + b + ")";
     }
 };
 
-// SUBTRACT instruction
+// -------------------- SUBTRACT --------------------
+
 class SubtractInstruction : public Instruction {
 private:
     std::string result;
     std::string operand1;
     std::string operand2;
-    bool op1IsValue;
-    bool op2IsValue;
-    uint16_t op1Value;
-    uint16_t op2Value;
-
+    bool op1IsValue = false;
+    bool op2IsValue = false;
+    uint16_t op1Value = 0;
+    uint16_t op2Value = 0;
 public:
     SubtractInstruction(const std::string& res, const std::string& op1, const std::string& op2)
-        : result(res), operand1(op1), operand2(op2), op1IsValue(false), op2IsValue(false) {
+        : result(trimVar(res)), operand1(trimVar(op1)), operand2(trimVar(op2)) {
+        type = SUBTRACT;
     }
-
     SubtractInstruction(const std::string& res, const std::string& op1, uint16_t op2)
-        : result(res), operand1(op1), op2Value(op2), op1IsValue(false), op2IsValue(true) {
+        : result(trimVar(res)), operand1(trimVar(op1)), op2IsValue(true), op2Value(op2) {
+        type = SUBTRACT;
     }
-
     SubtractInstruction(const std::string& res, uint16_t op1, const std::string& op2)
-        : result(res), operand2(op2), op1Value(op1), op1IsValue(true), op2IsValue(false) {
+        : result(trimVar(res)), operand2(trimVar(op2)), op1IsValue(true), op1Value(op1) {
+        type = SUBTRACT;
     }
-
     SubtractInstruction(const std::string& res, uint16_t op1, uint16_t op2)
-        : result(res), op1Value(op1), op2Value(op2), op1IsValue(true), op2IsValue(true) {
+        : result(trimVar(res)), op1IsValue(true), op2IsValue(true), op1Value(op1), op2Value(op2) {
+        type = SUBTRACT;
     }
 
     bool execute(ProcessContext& context) override {
-        uint16_t val1 = op1IsValue ? op1Value : context.getVariable(operand1);
-        uint16_t val2 = op2IsValue ? op2Value : context.getVariable(operand2);
-
-        // Perform subtraction with underflow protection (clamp to 0)
-        uint16_t resultValue = (val1 >= val2) ? (val1 - val2) : 0;
-
-        context.setVariable(result, resultValue);
+        uint16_t v1 = op1IsValue ? op1Value : context.getVariable(operand1);
+        uint16_t v2 = op2IsValue ? op2Value : context.getVariable(operand2);
+        uint16_t rv = (v1 >= v2) ? (v1 - v2) : 0;
+        context.setVariable(result, rv);
         return true;
     }
-
     std::string toString() const override {
-        std::string op1Str = op1IsValue ? std::to_string(op1Value) : operand1;
-        std::string op2Str = op2IsValue ? std::to_string(op2Value) : operand2;
-        return "SUBTRACT(" + result + ", " + op1Str + ", " + op2Str + ")";
+        std::string a = op1IsValue ? std::to_string(op1Value) : operand1;
+        std::string b = op2IsValue ? std::to_string(op2Value) : operand2;
+        return "SUBTRACT(" + result + ", " + a + ", " + b + ")";
     }
 };
 
-// SLEEP instruction
+// -------------------- SLEEP --------------------
+
 class SleepInstruction : public Instruction {
 private:
     uint8_t cycles;
-
 public:
-    SleepInstruction(uint8_t c) : cycles(c) {}
-
-    bool execute(ProcessContext& context) override {
-        context.setSleep(cycles);
-        return true;  // Sleep instruction itself completes immediately
-    }
-
-    std::string toString() const override {
-        return "SLEEP(" + std::to_string(cycles) + ")";
-    }
-
+    explicit SleepInstruction(uint8_t c) : cycles(c) { type = SLEEP; }
+    bool execute(ProcessContext& context) override { context.setSleep(cycles); return true; }
+    std::string toString() const override { return "SLEEP(" + std::to_string(cycles) + ")"; }
     int getExecutionCycles() const override { return cycles; }
 };
 
-// FOR instruction
+// -------------------- FOR --------------------
+
 class ForInstruction : public Instruction {
 private:
     std::vector<std::shared_ptr<Instruction>> instructions;
     int repeats;
     mutable int currentIteration;
     mutable int currentInstructionIndex;
-
 public:
     ForInstruction(const std::vector<std::shared_ptr<Instruction>>& instrs, int reps)
         : instructions(instrs), repeats(reps), currentIteration(0), currentInstructionIndex(0) {
+        type = FOR;
     }
-
     bool execute(ProcessContext& context) override {
-        if (currentIteration >= repeats) {
-            return true;  // For loop completed
+        if (currentIteration >= repeats) return true;
+        if (currentInstructionIndex >= static_cast<int>(instructions.size())) {
+            ++currentIteration; currentInstructionIndex = 0;
+            if (currentIteration >= repeats) return true;
         }
-
-        if (currentInstructionIndex >= instructions.size()) {
-            // Finished current iteration
-            currentIteration++;
-            currentInstructionIndex = 0;
-
-            if (currentIteration >= repeats) {
-                return true;  // All iterations complete
+        if (currentInstructionIndex < static_cast<int>(instructions.size())) {
+            if (instructions[currentInstructionIndex]->execute(context)) {
+                ++currentInstructionIndex;
             }
         }
-
-        // Execute current instruction
-        if (currentInstructionIndex < instructions.size()) {
-            bool instructionComplete = instructions[currentInstructionIndex]->execute(context);
-            if (instructionComplete) {
-                currentInstructionIndex++;
-            }
-        }
-
-        return false;  // For loop not yet complete
+        return false;
     }
-
     std::string toString() const override {
-        return "FOR([" + std::to_string(instructions.size()) + " instructions], " + std::to_string(repeats) + ")";
+        return "FOR([" + std::to_string(instructions.size()) + " instructions], " +
+            std::to_string(repeats) + ")";
     }
+};
+
+// -------------------- WRITE --------------------
+
+class WriteInstruction : public Instruction {
+private:
+    uint16_t address;
+    std::string variable;
+public:
+    WriteInstruction(uint16_t addr, const std::string& var)
+        : address(addr), variable(trimVar(var)) {
+        type = WRITE;
+    }
+    bool execute(ProcessContext& context) override {
+        context.writeMemory(address, context.getVariable(variable));
+        return true;
+    }
+    std::string toString() const override {
+        std::stringstream ss; ss << "WRITE(0x" << std::hex << address << ", " << variable << ")";
+        return ss.str();
+    }
+    bool memoryAccessed() const override { return true; }
+    uint16_t getMemoryAddress() const { return address; }
+};
+
+// -------------------- READ --------------------
+
+class ReadInstruction : public Instruction {
+private:
+    std::string variable;
+    uint16_t address;
+public:
+    ReadInstruction(const std::string& var, uint16_t addr)
+        : variable(trimVar(var)), address(addr) {
+        type = READ;
+    }
+    bool execute(ProcessContext& context) override {
+        context.setVariable(variable, context.readMemory(address));
+        return true;
+    }
+    std::string toString() const override {
+        std::stringstream ss; ss << "READ(" << variable << ", 0x" << std::hex << address << ")";
+        return ss.str();
+    }
+    bool memoryAccessed() const override { return true; }
+    uint16_t getMemoryAddress() const { return address; }
 };
 
 #endif // INSTRUCTION_H
