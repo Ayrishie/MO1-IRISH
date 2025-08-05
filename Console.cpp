@@ -156,6 +156,9 @@ void Console::initialize() {
             memPerFrame);
 
         memoryManager->initialize(maxOverallMem);
+
+        memPerProc = maxMemPerProc;  // Or any value between min-max
+        memoryManager->setMemPerProc(memPerProc);
         // Show config summary
         std::cout << "\033[32m";
         std::cout << "===============================\n";
@@ -210,11 +213,11 @@ bool Console:: memoryCheck(int maxMem, int frameSize, int minProcMem, int maxPro
         return false;
     }
 
-    if (minProcMem < 64 || maxProcMem < 64
-        || minProcMem > 65536 || maxProcMem > 65536) {
-        std::cerr << "\033[31mError: mem-per-proc values must be in range [64, 65536]\033[0m\n";
-        return false;
-    }
+    //if (minProcMem < 64 || maxProcMem < 64
+    //    || minProcMem > 65536 || maxProcMem > 65536) {
+    //    std::cerr << "\033[31mError: mem-per-proc values must be in range [64, 65536]\033[0m\n";
+    //    return false;
+    //}
 
     if (minProcMem > maxProcMem) {
         std::cerr << "\033[31mError: min-mem-per-proc cannot exceed max-mem-per-proc\033[0m\n";
@@ -226,10 +229,10 @@ bool Console:: memoryCheck(int maxMem, int frameSize, int minProcMem, int maxPro
     //    return false;
     //}
 
-    if (minProcMem % frameSize != 0 || maxProcMem % frameSize != 0) {
-        std::cerr << "\033[31mError: mem-per-proc values must be divisible by mem-per-frame\033[0m\n";
-        return false;
-    }
+    //if (minProcMem % frameSize != 0 || maxProcMem % frameSize != 0) {
+    //    std::cerr << "\033[31mError: mem-per-proc values must be divisible by mem-per-frame\033[0m\n";
+    //    return false;
+    //}
 
     return true;
 }
@@ -504,26 +507,22 @@ void Console::showProcessScreen(const std::string& procName) {
 
 
 void Console::printUtilization(std::ostream* out) const {
-    // choose whether we're writing to cout or a file
     std::ostream& o = out ? *out : std::cout;
 
-    // count how many are still active
-    int activeCount = 0;
-    for (auto& p : processes) {
-        if (!p->isFinished()) ++activeCount;
+    // Count how many processes are currently assigned to a core
+    int coresUsed = 0;
+    for (const auto& p : processes) {
+        if (!p->isFinished() && p->core_id != -1) {
+            coresUsed++;
+        }
     }
 
-    // cores used = min(activeCount, cpuCount)
-    int coresUsed = std::min(activeCount, cpuCount);
     int coresAvail = cpuCount - coresUsed;
+    double utilization = (double)coresUsed / cpuCount * 100.0;
 
-    // utilization percentage
-    double util = (double)coresUsed / (double)cpuCount * 100.0;
-
-    // print exactly like the spec screenshot
     o << "CPU utilization: "
         << std::fixed << std::setprecision(0)
-        << util << "%\n";
+        << utilization << "%\n";
     o << "Cores used:       " << coresUsed << "\n";
     o << "Cores available:  " << coresAvail << "\n";
     o << "----------------------------------------\n";

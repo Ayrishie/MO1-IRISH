@@ -32,6 +32,7 @@ private:
 
     std::vector<uint64_t> frameLastAccess;  // LRU timestamps
     uint64_t accessCounter = 0;              // Global counter
+    int usedMemory = 0;
 
 public:
     MemoryManager(int maxOverallMem, int memPerFrame);
@@ -60,4 +61,7 @@ public:
 
     int getPageIns() const { return pageIns; }
     int getPageOuts() const { return pageOuts; }
+    void setMemPerProc(int size);
+
+
 };

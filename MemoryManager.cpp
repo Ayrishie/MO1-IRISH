@@ -19,6 +19,8 @@ MemoryManager::MemoryManager(int maxMem, int frameSizeBytes)
     framePageNum.resize(totalFrames, -1);
 
     frameLastAccess.resize(totalFrames, 0);
+
+    
 }
 
 
@@ -271,3 +273,7 @@ int MemoryManager::getFrameSizeBytes() const {
     return frameSizeBytes;
 }
 
+
+void MemoryManager::setMemPerProc(int size) {
+    memPerProc = size;
+}

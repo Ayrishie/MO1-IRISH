@@ -106,14 +106,21 @@ void RRScheduler::stop() {
 void RRScheduler::displayProcesses() const {
     std::lock_guard<std::mutex> lock(queue_mutex);
 
-    std::cout << "In-Memory Active processes:\n";
+    std::cout << "Running processes (In-Memory + Assigned to Core):\n";
     for (const auto& p : processes) {
-        if (!p->isFinished() && memoryManager->isAllocated(p->getName())) {
+        if (!p->isFinished() && memoryManager->isAllocated(p->getName()) && p->core_id != -1) {
             p->displayProcess();
         }
     }
 
-    std::cout << "\nWaiting (deferred due to full memory):\n";
+    std::cout << "\nWaiting for CPU (In-Memory but Not Assigned):\n";
+    for (const auto& p : processes) {
+        if (!p->isFinished() && memoryManager->isAllocated(p->getName()) && p->core_id == -1) {
+            p->displayProcess();
+        }
+    }
+
+    std::cout << "\nWaiting for memory (Not yet allocated):\n";
     for (const auto& p : processes) {
         if (!p->isFinished() && !memoryManager->isAllocated(p->getName())) {
             p->displayProcess();
