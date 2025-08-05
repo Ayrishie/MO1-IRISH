@@ -1,5 +1,5 @@
+=== EVICTION LOG ===
+     PID   Page
+---------------
 EVICT 1 1
-EVICT 1 3
-EVICT 1 0
-EVICT 0 2
-EVICT 0 1
+EVICT 0 0

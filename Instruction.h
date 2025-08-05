@@ -42,20 +42,46 @@ private:
 
     int processId = -1;
     MemoryManager* memoryManager = nullptr;
+
+    static constexpr size_t SYMBOL_TABLE_BYTES = 64;
+    static constexpr size_t VAR_SIZE_BYTES = sizeof(uint16_t);           // 2 bytes
+    static constexpr size_t MAX_SYMBOL_VARS = SYMBOL_TABLE_BYTES / VAR_SIZE_BYTES; // 32
+
+    size_t symbolVarCount = 0;  // how many distinct vars declared so far
 public:
     ProcessContext(const std::string& name, int pid, MemoryManager* mm)
         : processName(name), processId(pid), memoryManager(mm),
         currentCycle(0), sleepCycles(0) {
     }
 
-    // Variable management
+    // NEW – enforces 32-variable (64 B) cap
     uint16_t getVariable(const std::string& name) {
         auto it = variables.find(name);
-        return (it != variables.end()) ? it->second : 0;  // Auto-declare with 0 if not found
+        if (it != variables.end()) {
+            return it->second;
+        }
+        // implicit declaration via READ only if under cap
+        if (symbolVarCount < MAX_SYMBOL_VARS) {
+            ++symbolVarCount;
+            variables[name] = 0;
+            return 0;
+        }
+        // cap reached → ignore
+        return 0;
     }
 
     void setVariable(const std::string& name, uint16_t value) {
-        variables[name] = value;
+        auto it = variables.find(name);
+        if (it != variables.end()) {
+            // overwrite existing
+            it->second = value;
+        }
+        else if (symbolVarCount < MAX_SYMBOL_VARS) {
+            // new var under cap
+            variables[name] = value;
+            ++symbolVarCount;
+        }
+        // else: cap reached → silently drop
     }
 
     // Sleep management

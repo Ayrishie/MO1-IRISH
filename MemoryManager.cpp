@@ -17,6 +17,8 @@ MemoryManager::MemoryManager(int maxMem, int frameSizeBytes)
     frameInUse.resize(totalFrames, false);
     frameOwner.resize(totalFrames, -1);
     framePageNum.resize(totalFrames, -1);
+
+    frameLastAccess.resize(totalFrames, 0);
 }
 
 
@@ -130,6 +132,11 @@ void MemoryManager::initialize(int overallMemorySize) {
         if (!ofs) {
             std::cerr << "Error: could not create backing-store file\n";
         }
+        else {
+            ofs << "=== EVICTION LOG ===\n";
+            ofs << "     PID   Page\n";
+            ofs << "---------------\n";
+        }
         ofs.close(); // Explicitly close the file
     }
 }
@@ -144,6 +151,7 @@ int MemoryManager::allocatePage(int processId, int pageNum) {
             frameInUse[i] = true;
             frameOwner[i] = processId;
             framePageNum[i] = pageNum;
+            frameLastAccess[i] = ++accessCounter;
             pageIns++;
             return i;
         }
@@ -152,9 +160,15 @@ int MemoryManager::allocatePage(int processId, int pageNum) {
     // No free frames - eviction required
     std::cerr << "[DEBUG] No free frames! Eviction required!" << std::endl;
 
-    static std::mt19937 rng{ std::random_device{}() };
-    std::uniform_int_distribution<int> dist(0, totalFrames - 1);
-    int victim = dist(rng);
+    // LRU Victim
+    int victim = 0;
+    uint64_t oldest = std::numeric_limits<uint64_t>::max();
+    for (int i = 0; i < totalFrames; ++i) {
+        if (frameLastAccess[i] < oldest) {
+            oldest = frameLastAccess[i];
+            victim = i;
+        }
+    }
 
     int oldOwner = frameOwner[victim];
     int oldPageNum = framePageNum[victim];
@@ -168,6 +182,7 @@ int MemoryManager::allocatePage(int processId, int pageNum) {
     frameOwner[victim] = processId;
     framePageNum[victim] = pageNum;
 
+    frameLastAccess[victim] = ++accessCounter;
     pageIns++;
     return victim;
 }

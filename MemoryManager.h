@@ -28,6 +28,10 @@ private:
 
     const std::string        backingStoreFile = "csopesy-backing-store.txt";
 
+    // nEW
+
+    std::vector<uint64_t> frameLastAccess;  // LRU timestamps
+    uint64_t accessCounter = 0;              // Global counter
 
 public:
     MemoryManager(int maxOverallMem, int memPerFrame);
