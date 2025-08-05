@@ -1,6 +1,6 @@
 
 ## Author
-BALDEROSA, CHAN, RAMOS, TAMSE
+ARAÑO, BALDEROSA, RAMOS, TAMSE
 
 ## Overview
 A console-based OS emulator that demonstrates:
