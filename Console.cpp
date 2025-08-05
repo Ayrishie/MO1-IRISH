@@ -22,7 +22,7 @@ std::string getCurrentTime() {
     auto now = std::chrono::system_clock::now();
     std::time_t now_time = std::chrono::system_clock::to_time_t(now);
     std::tm tm;
-    localtime_s(&tm, &now_time);  // Windows-safe version
+    localtime_r(&now_time, &tm);  // Unix-safe version
     std::stringstream ss;
     ss << std::put_time(&tm, "%m/%d/%Y %I:%M:%S %p");
     return ss.str();
@@ -82,7 +82,7 @@ void Console::initialize() {
 
     clear();
 
-    std::ifstream config("config.txt");
+    std::ifstream config("Config.txt");
     if (!config.is_open()) {
         std::cerr << "Error: Could not open config.txt\n";
         return;
