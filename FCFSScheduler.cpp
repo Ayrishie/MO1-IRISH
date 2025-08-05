@@ -1,6 +1,7 @@
 #include "FCFSScheduler.h"
 #include <iostream>
 #include <chrono>
+#include "Header.h"
 
 
 FCFSScheduler::FCFSScheduler(int cores, int delayPerExecution, MemoryManager* memMgr)
@@ -44,11 +45,15 @@ void FCFSScheduler::cpuWorker(int coreId) {
         std::shared_ptr<Process> process;
         {   // Dequeue (or wait)
             std::unique_lock<std::mutex> lock(queue_mutex);
-            cv.wait(lock, [this] {
-                return !ready_queue.empty() || !scheduler_running;
-                });
+
+            if (ready_queue.empty()) {
+                cpuIdleTicks++;
+                cv.wait_for(lock, std::chrono::milliseconds(delayPerExecution));
+                continue;
+            }
+
             if (!scheduler_running) break;
-            if (ready_queue.empty()) continue;
+
             process = ready_queue.front();
             ready_queue.pop();
         }
@@ -69,13 +74,15 @@ void FCFSScheduler::cpuWorker(int coreId) {
         // Run to completion 
         process->core_id = coreId;
         while (!process->isFinished()) {
+            int before = process->executed_commands;
             process->executeCommand(coreId);
-            std::this_thread::sleep_for(
-                std::chrono::milliseconds(delayPerExecution)
-            );
+            if (process->executed_commands > before) {
+                cpuActiveTicks++;  // Only count if actual instruction executed
+            }
         }
         process->core_id = -1;
 
+        std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
         // Free memory when done
         if (memoryManager) {
             memoryManager->free(process->getName());

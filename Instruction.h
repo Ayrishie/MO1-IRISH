@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
 
@@ -7,6 +7,11 @@
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
+#include <unordered_set>
+#include <sstream>
+#include <iostream>
+
+#include "MemoryManager.h" 
 
 // Forward declaration
 class ProcessContext;
@@ -28,11 +33,20 @@ private:
     int currentCycle;
     int sleepCycles;
     std::vector<std::string> outputBuffer;  // To store PRINT outputs
-    // NEW
-    std::unordered_map<uint16_t, uint16_t> memory;  // Simulated memory
 
+    // NEW
+    size_t memorySize = 4096;  // default, but will be overwritten
+
+    std::unordered_map<uint16_t, uint16_t> pageTable;  // key: page number, value: frame number
+    std::unordered_set<uint16_t> allocatedPages;       // which pages are currently loaded
+
+    int processId = -1;
+    MemoryManager* memoryManager = nullptr;
 public:
-    ProcessContext(const std::string& name) : processName(name), currentCycle(0), sleepCycles(0) {}
+    ProcessContext(const std::string& name, int pid, MemoryManager* mm)
+        : processName(name), processId(pid), memoryManager(mm),
+        currentCycle(0), sleepCycles(0) {
+    }
 
     // Variable management
     uint16_t getVariable(const std::string& name) {
@@ -59,15 +73,97 @@ public:
     int getCurrentCycle() const { return currentCycle; }
     void incrementCycle() { currentCycle++; }
 
-    // Simulated memory access
+    // NEW
+
+    void setMemorySize(size_t size) { memorySize = size; }
+
     void writeMemory(uint16_t address, uint16_t value) {
-        memory[address] = value;
+        if (static_cast<size_t>(address) >= memorySize)
+            throw std::runtime_error("ACCESS_VIOLATION at 0x" + int_to_hex(address));
+
+
+        uint16_t page = address / memoryManager->getFrameSizeBytes();
+
+        // 2) On a page fault...
+        if (!isPageAllocated(page)) {
+            // 2a) Try to reload any previously‐evicted content
+            memoryManager->loadPageFromBackingStore(processId, page);
+
+            // 2b) Allocate a physical frame 
+            int frame = memoryManager->allocatePage(processId, page);
+            if (frame == -1)
+                throw std::runtime_error("ACCESS_VIOLATION at 0x" + int_to_hex(address));
+
+            mapPageToFrame(page, frame);
+        }
+
+        std::cerr << "[DEBUG] Writing " << value << " to address 0x"
+            << std::hex << address << std::endl;
+
+
+        // 3) Now “store” the value in your simulated memory (stubbed for now)
     }
 
-    uint16_t readMemory(uint16_t address) const {
-        auto it = memory.find(address);
-        return (it != memory.end()) ? it->second : 0;
+    uint16_t readMemory(uint16_t address) {
+        // 0) Bounds‐check
+        if (static_cast<size_t>(address) >= memorySize)
+            throw std::runtime_error("ACCESS_VIOLATION at 0x" + int_to_hex(address));
+
+        // 1) Compute page number
+        uint16_t page = address / memoryManager->getFrameSizeBytes();  // swap out 16→frameSizeBytes later
+
+        // 2) Page‐fault handling
+        if (!isPageAllocated(page)) {
+            // 2a) Reload from backing store if available
+            memoryManager->loadPageFromBackingStore(processId, page);
+
+            // 2b) Allocate a frame (evicts someone else via savePageToBackingStore)
+            int frame = memoryManager->allocatePage(processId, page);
+            if (frame == -1)
+                throw std::runtime_error("ACCESS_VIOLATION at 0x" + int_to_hex(address));
+
+            // 2c) Map it
+            mapPageToFrame(page, frame);
+        }
+
+        // 3) “Read” the value (stubbed to return 0)
+        return 0;
     }
+
+    std::string int_to_hex(uint16_t address) {
+        std::stringstream ss;
+        ss << std::hex << std::uppercase << address;
+        return ss.str();
+    }
+
+    bool isPageAllocated(uint16_t pageNumber) const {
+        return allocatedPages.count(pageNumber) > 0;
+    }
+
+    void mapPageToFrame(uint16_t pageNumber, uint16_t frameNumber) {
+        pageTable[pageNumber] = frameNumber;
+        allocatedPages.insert(pageNumber);
+    }
+
+    int getMappedFrame(uint16_t pageNumber) const {
+        auto it = pageTable.find(pageNumber);
+        if (it != pageTable.end()) return it->second;
+        return -1; // Not mapped
+    }
+
+    void reset() {
+        currentCycle = 0;
+        sleepCycles = 0;
+        outputBuffer.clear();
+        variables.clear();
+        pageTable.clear();
+        allocatedPages.clear();
+    }
+
+    MemoryManager* getMemoryManager() const {
+        return memoryManager;
+    }
+
 };
 
 // PRINT instruction
@@ -282,6 +378,9 @@ public:
     }
 };
 
+// NEW
+
+// WRITE(address, variable)
 class WriteInstruction : public Instruction {
 private:
     uint16_t address;
@@ -305,7 +404,7 @@ public:
     }
 };
 
-
+// READ(variable, address)
 class ReadInstruction : public Instruction {
 private:
     std::string variable;
@@ -328,5 +427,4 @@ public:
         return ss.str();
     }
 };
-
 #endif // INSTRUCTION_H

@@ -7,18 +7,35 @@
 #include <vector>
 #include <memory>
 
+#include <cstdint>
+#include <sstream>
+#include <iomanip>
+
+
 class InstructionGenerator {
 private:
     std::mt19937 rng;
     std::uniform_int_distribution<int> instructionTypeDist;
     std::uniform_int_distribution<uint16_t> valueDist;
-    std::uniform_int_distribution<int>   sleepDist;
+    std::uniform_int_distribution<int> sleepDist;
     std::uniform_int_distribution<int> repeatsDist;
     std::uniform_int_distribution<int> forInstructionCountDist;
+    std::uniform_int_distribution<uint16_t> addressDist; 
 
     std::vector<std::string> variableNames = { "x", "y", "z", "a", "b", "c", "counter", "temp", "result", "value" };
     std::uniform_int_distribution<size_t> variableNameDist;
 
+    inline std::shared_ptr<Instruction> generateReadInstruction() {
+        std::string var = getRandomVariableName();
+        uint16_t addr = (addressDist(rng) / 2) * 2;
+        return std::make_shared<ReadInstruction>(var, addr);
+    }
+
+    inline std::shared_ptr<Instruction> generateWriteInstruction() {
+        std::string var = getRandomVariableName();
+        uint16_t addr = (addressDist(rng) / 2) * 2;
+        return std::make_shared<WriteInstruction>(addr, var);
+    }
 public:
     InstructionGenerator()
         : rng(std::random_device{}()),
@@ -51,18 +68,34 @@ public:
             return generateSleepInstruction();
         case 5: // FOR
             return generateForInstruction(processName, nestingLevel + 1);
+        //case 6: // READ
+        //    return generateReadInstruction();
+        //case 7: // WRITE
+        //    return generateWriteInstruction();
         default:
             return generatePrintInstruction(processName);
         }
     }
 
-    std::vector<std::shared_ptr<Instruction>> generateInstructionSet(const std::string& processName, int count) {
-        std::vector<std::shared_ptr<Instruction>> instructions;
+    std::vector<std::shared_ptr<Instruction>> generateInstructionSet(
+        const std::string& processName,
+        int count,
+        uint16_t memorySize)
+    {
 
-        for (int i = 0; i < count; i++) {
+        // Ensure all READ/WRITE addresses stay within [0, memorySize-1]
+        addressDist.param(
+            std::uniform_int_distribution<uint16_t>::param_type(
+                0,
+                memorySize > 1 ? memorySize - 1 : 0
+            )
+        );
+
+
+        std::vector<std::shared_ptr<Instruction>> instructions;
+        for (int i = 0; i < count; ++i) {
             instructions.push_back(generateRandomInstruction(processName));
         }
-
         return instructions;
     }
 

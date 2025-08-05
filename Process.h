@@ -17,7 +17,7 @@ class Process {
 private:
     static std::atomic<int> next_process_id;
     static std::mutex id_mutex;
-    std::unique_ptr<std::ofstream> log_file;
+    std::string log_file_path;
     static std::mutex log_mutex;
 
     bool debug = true;  // toggle debug on/off
@@ -34,6 +34,7 @@ private:
     std::vector<std::string> outputBuffer;
 
 
+
 public:
     std::string name;
     int total_commands;
@@ -43,10 +44,20 @@ public:
     int process_id;
     size_t memory;
 
-    Process(const std::string& pname, int commands, size_t memory);
+
+    // NEW
+    bool crashedDueToViolation = false;
+    std::string violationMessage = "";
+
+    Process(const std::string& pname,
+        int commands,
+        size_t memory,
+        MemoryManager* mm);
+
     Process(const std::string& pname,
         const std::vector<std::shared_ptr<Instruction>>& instrs,
-        size_t memory);
+        size_t memory,
+        MemoryManager* mm);
 
     ~Process();
 
@@ -78,6 +89,8 @@ public:
 
 
 
+
+
     // Methods for screen command support
     void displayProcessInfo() const;
     void displayProcess(std::ostream& out) const;
@@ -98,8 +111,6 @@ public:
     void clearRecentOutputs() {
         outputBuffer.clear();
     }
-
-
 };
 
 #endif // PROCESS_H

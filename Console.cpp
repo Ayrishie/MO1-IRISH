@@ -1,16 +1,18 @@
 ﻿#include "Console.h"
 #include <cstdlib>
 
-#include "Console.h"
 #include <sstream> 
 #include <iostream>
 #include <filesystem> 
+#include <cmath>   
+
 using namespace std;
 
 
 //Handling File of process
 const std::string logDir = "processesLogs";
 namespace fs = std::filesystem;
+std::atomic<bool> disableAutoSpawn = false;
 
 Console::Console() {
   
@@ -95,6 +97,9 @@ void Console::initialize() {
     maxInstructions = 2000;
     delayPerExecution = 0;
     schedulerType = "fcfs";
+    memPerProc = 0;
+    minMemPerProc = 0;
+    maxMemPerProc = 0;
 
     // Create the directory if it does not exist
     if (!fs::exists(logDir)) {
@@ -132,17 +137,25 @@ void Console::initialize() {
             else if (key == "delay-per-exec") delayPerExecution = std::stoi(value);
             else if (key == "max-overall-mem") maxOverallMem = std::stoi(value);
             else if (key == "mem-per-frame") memPerFrame = std::stoi(value);
-            else if (key == "mem-per-proc") memPerProc = std::stoi(value);
+            else if (key == "min-mem-per-proc") {minMemPerProc = std::stoi(value);}
+            else if (key == "max-mem-per-proc") {maxMemPerProc = std::stoi(value);}
             else std::cout << "Warning: unknown key \"" << key << "\" skipped\n";
         }
-
-        if (!memoryCheck(maxOverallMem, memPerFrame, memPerProc)) {
+        config.close();
+        if (!memoryCheck(maxOverallMem,
+            memPerFrame,
+            minMemPerProc,
+            maxMemPerProc)) {
             return;
         }
 
-        // Initialize Memoery Manager
-        memoryManager = std::make_unique<MemoryManager>(maxOverallMem, memPerProc);
 
+        // Initialize Memoery Manager                   
+        memoryManager = std::make_unique<MemoryManager>(
+            maxOverallMem,
+            memPerFrame);
+
+        memoryManager->initialize(maxOverallMem);
         // Show config summary
         std::cout << "\033[32m";
         std::cout << "===============================\n";
@@ -165,8 +178,9 @@ void Console::initialize() {
         std::cout << "Instructions: " << minInstructions << " to " << maxInstructions << "\n";
         std::cout << "Delay per Exec: " << delayPerExecution << "ms\n";
         std::cout << "Max overall Mem: " << maxOverallMem << "bytes\n";
-        std::cout << "Mem per Frame " << memPerFrame << "bytes\n";
-        std::cout << "Mem per Proc: " << memPerProc << "bytes\n";
+        std::cout << "Min mem per Frame: " << memPerFrame << " bytes\n";
+        std::cout << "Min mem per Proc: " << minMemPerProc << " bytes\n"; 
+        std::cout << "Max mem per Proc: " << maxMemPerProc << " bytes\n"; 
         std::cout << "\033[0m";
 
         processes.clear();
@@ -185,30 +199,35 @@ void Console::initialize() {
     }
 }
 
-bool Console:: memoryCheck(int maxMem, int frameSize, int procMem) {
-    auto isPowerOfTwo = [](int x) {
+bool Console:: memoryCheck(int maxMem, int frameSize, int minProcMem, int maxProcMem) {
+    auto isPowerOfTwo = [&](int x) {
         return x > 0 && (x & (x - 1)) == 0;
         };
 
-    if (!isPowerOfTwo(maxMem) || !isPowerOfTwo(frameSize) || !isPowerOfTwo(procMem)) {
+    if (!isPowerOfTwo(maxMem) || !isPowerOfTwo(frameSize)
+        || !isPowerOfTwo(minProcMem) || !isPowerOfTwo(maxProcMem)) {
         std::cerr << "\033[31mError: Memory values must be powers of 2\033[0m\n";
         return false;
     }
 
-    if (maxMem < 64 || maxMem > 65536 ||
-        frameSize < 16 || frameSize > 65536 || // Change this to 64 after
-        procMem < 64 || procMem > 65536) {
-        std::cerr << "\033[31mError: Memory values must be in range [64, 65536]\033[0m\n";
+    if (minProcMem < 64 || maxProcMem < 64
+        || minProcMem > 65536 || maxProcMem > 65536) {
+        std::cerr << "\033[31mError: mem-per-proc values must be in range [64, 65536]\033[0m\n";
         return false;
     }
 
-    if (maxMem % frameSize != 0) {
-        std::cerr << "\033[31mError: maxOverallMem must be divisible by memPerFrame\033[0m\n";
+    if (minProcMem > maxProcMem) {
+        std::cerr << "\033[31mError: min-mem-per-proc cannot exceed max-mem-per-proc\033[0m\n";
         return false;
     }
 
-    if (procMem > maxMem) {
-        std::cerr << "\033[31mError: memPerProc exceeds maxOverallMem\033[0m\n";
+    if (maxProcMem > maxMem) {
+        std::cerr << "\033[31mError: max-mem-per-proc exceeds max-overall-mem\033[0m\n";
+        return false;
+    }
+
+    if (minProcMem % frameSize != 0 || maxProcMem % frameSize != 0) {
+        std::cerr << "\033[31mError: mem-per-proc values must be divisible by mem-per-frame\033[0m\n";
         return false;
     }
 
@@ -260,42 +279,31 @@ void Console::schedulerStart() {
 
     schedulerThread = std::thread([this]() {
         int tick = 0;
-        int quantumCycle = 0;
-
 
         while (schedulerRunning) {
             std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
             tick++;
 
-            if (tick % batchProcessFreq == 0) {
-                std::ostringstream nameStream;
-                nameStream << "p" << std::setfill('0') << std::setw(2) << ++pidCounter;
-                std::string name = nameStream.str();
-                int commands = minInstructions + (rand() % (maxInstructions - minInstructions + 1));
-                size_t memory = memPerProc;
-                auto process = std::make_shared<Process>(name, commands, memory);
-                {
-                    std::lock_guard<std::mutex> lock(processesMutex);
-                    processes.push_back(process);
+            if (!disableAutoSpawn) {
+                if (tick % batchProcessFreq == 0) {
+                    std::ostringstream nameStream;
+                    nameStream << "p" << std::setfill('0') << std::setw(2) << ++pidCounter;
+                    std::string name = nameStream.str();
+                    int commands = minInstructions + (rand() % (maxInstructions - minInstructions + 1));
+                    size_t memory = rollProcessMemory(minMemPerProc, maxMemPerProc);
+                    auto process = std::make_shared<Process>(name, commands, memory, memoryManager.get());
+                    {
+                        std::lock_guard<std::mutex> lock(processesMutex);
+                        processes.push_back(process);
+                    }
+                    if (schedulerType == "rr") {
+                        rrScheduler->enqueueProcess(process);
+                    }
+                    else {
+                        fcfsScheduler->addProcess(process);
+                    }
                 }
-                if (schedulerType == "rr") {
-                    rrScheduler->enqueueProcess(process);
-                }
-                else {
-                    fcfsScheduler->addProcess(process);
-                }
-
-
-                //std::cout << "\033[36m[Tick " << tick << "] Created process: " << name
-                //    << " with " << commands << " instructions\n\033[0m";
             }
-
-            // 2) snapshot every timeQuantum ticks
-            if (timeQuantum > 0 && tick % timeQuantum == 0) {
-                ++quantumCycle;
-            }
-
-            // Optional: Add per-tick scheduler logic here if needed
         }
         });
 
@@ -310,7 +318,12 @@ void Console::createProcessFromCommand(const std::string& procName, int procMem)
 
     int commands = minInstructions + (rand() % (maxInstructions - minInstructions + 1));
     size_t memory = procMem;
-    auto process = std::make_shared<Process>(procName, commands, memory);
+    auto process = std::make_shared<Process>(
+        procName,
+        commands,
+        memory,
+        memoryManager.get()
+    );
     {
         std::lock_guard<std::mutex> lock(processesMutex);
         processes.push_back(process);
@@ -401,7 +414,6 @@ void Console::showProcessScreen(const std::string& procName) {
             std::cout << line << "\n";
         }
         std::cout << "\n";
-        procPtr->clearRecentOutputs();
 
         // C) Execution state
         std::cout << "Current instruction line: "
@@ -424,7 +436,13 @@ void Console::showProcessScreen(const std::string& procName) {
             
         }
         if (procPtr->isFinished()) {
-            std::cout << "Finished!\n\n";
+
+            if (procPtr->crashedDueToViolation) {
+                std::cout << "\033[31m" << procPtr->violationMessage << "\033[0m\n\n";
+            }
+            else {
+                std::cout << "Finished!\n\n";
+            }
         }
 
         // D) Prompt
@@ -444,6 +462,7 @@ void Console::showProcessScreen(const std::string& procName) {
                 [](unsigned char c) { return std::toupper(c); });
 
             if (cmd == "EXIT") {
+                procPtr->clearRecentOutputs();
                 // return out of showProcessScreen entirely
 #ifdef _WIN32
                 system("cls");
@@ -454,6 +473,7 @@ void Console::showProcessScreen(const std::string& procName) {
                 return;
             }
             else if (cmd == "PROCESS-SMI") {
+                procPtr->clearRecentOutputs();
                 // redraw the same screen
                 break;
             }
@@ -743,6 +763,8 @@ void Console::reportUtil() {
     std::ofstream file("csopesy-log.txt");
     if (!file.is_open()) {
         std::cerr << "Error: Could not open csopesy-log.txt for writing.\n";
+
+        std::cout << "Current directory: " << std::filesystem::current_path() << '\n';
         return;
     }
 
@@ -872,6 +894,20 @@ void Console::parseInput(std::string userInput) {
 
         createProcessWithInstructions(procName, memSize, instructionStr);
     }
+    else if (args[0] == "process-smi") {
+        reportProcessSMI();
+    }
+    else if (args[0] == "vmstat") {
+        reportVMStat();
+    }
+    else if (args[0] == "disable-autospawn") {
+        disableAutoSpawn = true;
+        std::cout << "[INFO] Auto-process spawning disabled.\n";
+    }
+    else if (args[0] == "enable-autospawn") {
+        disableAutoSpawn = false;
+        std::cout << "[INFO] Auto-process spawning enabled.\n";
+    }
     else {
         std::cout << "Unknown command: " << userInput << "\n";
     }
@@ -928,17 +964,13 @@ bool Console::validateProcessCreation(const std::string& procName, int procMem) 
 
 void Console::createProcessWithInstructions(const std::string& procName, int procMem, const std::string& instructionStr) {
     // Validate process creation
-
-    bool hasInvalidInstruction = false;
-
     if (!validateProcessCreation(procName, procMem)) {
         return;
     }
 
-    std::cout << "\033[36m[INFO] Creating process: " << procName << "\033[0m\n";
-    std::cout << "\033[36m[INFO] Memory size: " << procMem << " bytes\033[0m\n";
-    std::cout << "\033[36m[INFO] Raw instruction input: " << instructionStr << "\033[0m\n";
-
+    std::cout << "[INFO] Creating process: " << procName << "\n";
+    std::cout << "[INFO] Memory size: " << procMem << " bytes\n";
+    std::cout << "[INFO] Raw instruction input: " << instructionStr << "\n";
 
     std::vector<std::shared_ptr<Instruction>> parsedInstructions;
 
@@ -962,7 +994,7 @@ void Console::createProcessWithInstructions(const std::string& procName, int pro
 
     if (!current.empty()) instructionLines.push_back(current);
 
-    std::cout << "\033[36m[INFO] Parsed instructions:\033[0m\n";
+    std::cout << "[INFO] Parsed instructions:\n";
 
     for (auto& line : instructionLines) {
         // Trim leading/trailing whitespace
@@ -987,10 +1019,11 @@ void Console::createProcessWithInstructions(const std::string& procName, int pro
             });
 
         if (keyword == "declare") {
+            std::istringstream args(line.substr(keywordEnd));
             std::string var;
             int value;
-            ss >> var >> value;
-            parsedInstructions.push_back(std::make_shared<DeclareInstruction>(var, value));
+            args >> var >> value;
+            parsedInstructions.push_back(std::make_shared<DeclareInstruction>(var, static_cast<uint16_t>(value)));
         }
         else if (keyword == "add") {
             std::string target, op1, op2;
@@ -1003,57 +1036,47 @@ void Console::createProcessWithInstructions(const std::string& procName, int pro
             parsedInstructions.push_back(std::make_shared<SubtractInstruction>(target, op1, op2));
         }
         else if (keyword == "write") {
-            std::stringstream ss(line);
-            std::string discard;
-            ss >> discard;  
-
-            std::string addrStr, var;
-            ss >> addrStr >> var;
+            std::string skip, addrStr, var;
+            ss >> skip >> addrStr >> var;
             try {
-                uint16_t addr = static_cast<uint16_t>(std::stoi(addrStr, nullptr, 16));
+                int addr = std::stoi(addrStr, nullptr, 16);
                 parsedInstructions.push_back(std::make_shared<WriteInstruction>(addr, var));
             }
             catch (...) {
-                std::cerr << "\033[31m[ERROR] Invalid READ address format: " << addrStr << "\033[0m\n";
+                std::cerr << "[ERROR] Invalid WRITE address format: " << addrStr << "\n";
             }
         }
         else if (keyword == "read") {
-            std::stringstream ss(line);
-            std::string discard;
-            ss >> discard;  // skip keyword "read"
-
-            std::string var, addrStr;
-            ss >> var >> addrStr;
+            std::string skip, var, addrStr;
+            ss >> skip >> var >> addrStr;
             try {
-                uint16_t addr = static_cast<uint16_t>(std::stoi(addrStr, nullptr, 16));
+                int addr = std::stoi(addrStr, nullptr, 16);
                 parsedInstructions.push_back(std::make_shared<ReadInstruction>(var, addr));
             }
             catch (...) {
-                std::cerr << "\033[31m[ERROR] Invalid READ address format: " << addrStr << "\033[0m\n";
+                std::cerr << "[ERROR] Invalid READ address format: " << addrStr << "\n";
             }
         }
-
         else if (keyword == "print") {
             handlePrintInstruction(line, parsedInstructions);
         }
         else {
-            std::cerr << "\033[33m[WARNING] Unknown instruction: " << keyword << "\033[0m\n"; 
-            hasInvalidInstruction = true;  // <- flagging failure
+            std::cerr << "[WARNING] Unknown instruction: " << keyword << "\n";
         }
     }
 
-    if (hasInvalidInstruction || parsedInstructions.empty()) {
-        std::cerr << "\033[31m[ERROR] Process not created due to invalid instruction(s).\033[0m\n";
-        return;
-    }
-
-    if (parsedInstructions.size() < 1 || parsedInstructions.size() > 50) {
-        std::cerr << "\033[31m[ERROR] Invalid instruction count: must be between 1 and 50.\033[0m\n";
+    if (parsedInstructions.empty()) {
+        std::cerr << "[ERROR] No valid instructions found. Process not created.\n";
         return;
     }
 
     // Step 2: Create and queue process
-    auto process = std::make_shared<Process>(procName, parsedInstructions, procMem);
+    auto process = std::make_shared<Process>(
+        procName,
+        parsedInstructions,
+        procMem,
+        memoryManager.get()
+    );
 
     {
         std::lock_guard<std::mutex> lock(processesMutex);
@@ -1068,8 +1091,8 @@ void Console::createProcessWithInstructions(const std::string& procName, int pro
         fcfsScheduler->addProcess(process);
     }
 
-    std::cout << "\033[32m[SUCCESS] Process " << procName << " created with "
-        << parsedInstructions.size() << " instruction(s) and queued.\033[0m\n";
+    std::cout << "[SUCCESS] Process " << procName << " created with " << parsedInstructions.size()
+        << " instruction(s) and queued.\n";
 }
 
 
@@ -1111,4 +1134,159 @@ void Console::handlePrintInstruction(const std::string& line, std::vector<std::s
         parsedInstructions.push_back(std::make_shared<PrintInstruction>(message_content, variable_name));
     else
         parsedInstructions.push_back(std::make_shared<PrintInstruction>(message_content));
+}
+
+int Console::rollProcessMemory(int minMem, int maxMem) {  
+    if (minMem == maxMem) {
+        return minMem;
+    }
+    int expMin = static_cast<int>(std::log2(minMem));
+    int expMax = static_cast<int>(std::log2(maxMem));
+    int e = expMin + (std::rand() % (expMax - expMin + 1));
+    return (1 << e);
+}
+
+std::string padLine(const std::string& content, int width = 60) {
+    std::ostringstream oss;
+    oss << "| " << std::left << std::setw(width - 1) << content << "|";
+    return oss.str();
+}
+
+void Console::reportProcessSMI() {
+
+    clear();
+    if (!memoryManager) {
+        std::cerr << "System not initialized.\n";
+        return;
+    }
+
+    // Frame & memory calculation
+    int frameSize = memoryManager->getFrameSizeBytes();
+    int totalMem = memoryManager->getTotalMemory();  // Get from MemoryManager
+    int totalFrames = totalMem / frameSize;
+
+    int usedFrames = 0;
+    for (int i = 0; i < totalFrames; ++i) {
+        if (memoryManager->isFrameOccupied(i)) ++usedFrames;
+    }
+
+    int usedMem = usedFrames * frameSize;
+    double memUtil = (double)usedMem / (double)totalMem * 100.0;
+    int cpuUtil = 100;  // Placeholder for now
+
+    // Header output
+    std::cout << "+------------------------------------------------------------+\n";
+    std::cout << "|  PROCESS-SMI  V01.00       Driver Version: 01.00           |\n";
+    std::cout << "+------------------------------------------------------------+\n";
+    std::cout << padLine("CPU Utilization:   " + std::to_string(cpuUtil) + "%") << "\n";
+
+    std::ostringstream memUsageLine;
+    memUsageLine << "Memory Usage:      " << usedMem << " B / " << totalMem << " B";
+    std::cout << padLine(memUsageLine.str()) << "\n";
+
+    std::ostringstream memUtilLine;
+    memUtilLine << "Memory Util:       " << std::fixed << std::setprecision(1) << memUtil << "%";
+    std::cout << padLine(memUtilLine.str()) << "\n";
+    std::cout << "+------------------------------------------------------------+\n";
+    std::cout << "| Running Processes and Page Usage:                          |\n";
+    std::cout << "|------------------------------------------------------------|\n";
+    std::cout << "| " << std::left
+        << std::setw(13) << "Process"
+        << std::setw(10) << "PID"
+        << std::setw(12) << "Mem (B)"
+        << std::setw(24) << "Pages Referenced"
+        << std::right << "|\n";
+    std::cout << "|------------------------------------------------------------|\n";
+
+    // Process listing
+    std::lock_guard<std::mutex> lock(processesMutex);
+    for (const auto& p : processes) {
+        std::unordered_set<uint16_t> pageSet;
+        const auto& instrs = p->getInstructions();
+
+        for (const auto& instr : instrs) {
+            auto str = instr->toString();
+            if (str.find("READ") != std::string::npos ||
+                str.find("WRITE") != std::string::npos) {
+                size_t addrPos = str.find("0x");
+                if (addrPos != std::string::npos) {
+                    std::stringstream ss;
+                    ss << std::hex << str.substr(addrPos + 2, 4);
+                    uint16_t addr;
+                    ss >> addr;
+                    uint16_t page = addr / frameSize;
+                    pageSet.insert(page);
+                }
+            }
+        }
+
+        std::stringstream pageList;
+        for (auto page : pageSet) {
+            pageList << page << " ";
+        }
+
+        std::cout << "| " << std::left
+            << std::setw(13) << p->getName()
+            << std::setw(10) << p->process_id
+            << std::setw(12) << p->memory
+            << std::setw(24) << pageList.str()
+            << std::right << "|\n";
+    }
+
+    std::cout << "+------------------------------------------------------------+\n\n";
+}
+void Console::reportVMStat() {
+    if (!memoryManager) {
+        std::cerr << "System not initialized.\n";
+        return;
+    }
+
+    int frameSize = memoryManager->getFrameSizeBytes();
+    int totalMem = memoryManager->getTotalMemory();
+    int totalFrames = totalMem / frameSize;
+
+    int usedFrames = 0;
+    for (int i = 0; i < totalFrames; ++i) {
+        if (memoryManager->isFrameOccupied(i)) ++usedFrames;
+    }
+
+    int usedMem = usedFrames * frameSize;
+    int freeMem = totalMem - usedMem;
+
+    // Placeholder values
+    int pageIns = memoryManager->getPageIns();
+    int pageOuts = memoryManager->getPageOuts();
+    extern int cpuActiveTicks;
+    extern int cpuIdleTicks;
+
+    auto line = [](const std::string& left, int val, const std::string& unit = "bytes") {
+        std::ostringstream oss;
+        oss << "| " << std::left << std::setw(22) << (left + ":")
+            << std::setw(6) << val << " " << std::setw(30) << unit << "|\n";
+        return oss.str();
+        };
+
+    auto row2 = [](const std::string& l1, int v1, const std::string& l2, int v2, const std::string& u1 = "", const std::string& u2 = "") {
+        std::ostringstream oss;
+        oss << "| " << std::left
+            << std::setw(21) << (l1 + ":") << std::setw(5) << v1
+            << "    " << std::setw(22) << (l2 + ":") << std::setw(7) << v2
+            << "|\n";
+        return oss.str();
+        };
+
+    std::cout << "+------------------------------------------------------------+\n";
+    std::cout << "|  VMSTAT  V01.00               Memory Monitor Report        |\n";
+    std::cout << "+------------------------------------------------------------+\n";
+
+    std::cout << line("Total Memory", totalMem);
+    std::cout << line("Used Memory", usedMem);
+    std::cout << line("Free Memory", freeMem);
+    std::cout << "|                                                            |\n";
+
+    std::cout << row2("Used Frames", usedFrames, "Free Frames", totalFrames - usedFrames);
+    std::cout << row2("Page-ins", pageIns, "Page-outs", pageOuts);
+    std::cout << row2("CPU Active Time", cpuActiveTicks, "CPU Idle Time", cpuIdleTicks, "ticks", "ticks");
+
+    std::cout << "+------------------------------------------------------------+\n\n";
 }

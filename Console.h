@@ -43,7 +43,9 @@ private:
     int delayPerExecution = 0;
     int maxOverallMem = 0;
     int memPerFrame = 0;
-    int memPerProc = 0;
+    int memPerProc = 0;          
+    int minMemPerProc = 0;          
+    int maxMemPerProc = 0;           
     std::string schedulerType;
 
     // Private functions
@@ -74,11 +76,16 @@ public:
     void parseInput(std::string userInput);
 
     // NEW
-    bool memoryCheck(int maxMem, int frameSize, int procMem);
+    bool memoryCheck(int maxMem, int frameSize, int minProcMem, int maxProcMem); 
     bool isValidProcessMemory(int procMem);
     bool validateProcessCreation(const std::string& procName, int procMem);
     void createProcessWithInstructions(const std::string& procName, int procMem, const std::string& rawInstructionString);
     void handlePrintInstruction(const std::string& line, std::vector<std::shared_ptr<Instruction>>& parsedInstructions);
+
+    static int rollProcessMemory(int minMem, int maxMem);  
+
+    void reportProcessSMI();
+    void reportVMStat();
 };
 
 #endif

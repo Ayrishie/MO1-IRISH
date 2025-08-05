@@ -1,4 +1,5 @@
 #include "RRScheduler.h"
+#include "Header.h"
 
 RRScheduler::RRScheduler(int cores, int quantum, int delayPerExecution, MemoryManager* memMgr)
     : cores(cores), quantum(quantum), delayPerExecution(delayPerExecution), scheduler_running(false), memoryManager(memMgr) {}
@@ -17,7 +18,11 @@ void RRScheduler::scheduleCPU(int coreId) {
                 });
 
             if (!scheduler_running) break; // if scheduler stop then end the loop
-            if (readyQueue.empty()) continue; // still nothing to run
+            if (readyQueue.empty()) {
+                cpuIdleTicks++; 
+                cv.wait_for(lock, std::chrono::milliseconds(delayPerExecution));
+                continue;
+            }
 
             //dequeue next process
             process = readyQueue.front();
@@ -47,6 +52,7 @@ void RRScheduler::scheduleCPU(int coreId) {
 
             if (process->executed_commands > prevInstructions) { //if instruction was executed then increment quantum cycle usage
                 quantumUsed++;
+                cpuActiveTicks++;
             }
             // Simulate work
             std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));

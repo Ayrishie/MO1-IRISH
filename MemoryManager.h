@@ -1,7 +1,7 @@
-#pragma once
+﻿#pragma once
 #include <string>
 #include <vector>
-#include <mutex>  
+#include <mutex>
 
 struct MemoryBlock {
     int start;
@@ -15,20 +15,45 @@ private:
     int totalMemory;
     int memPerProc;
     std::vector<MemoryBlock> memoryBlocks;
-
     mutable std::mutex memMutex;
-public:
-    MemoryManager(int maxMem, int procMem);
-    ~MemoryManager() = default;
 
+    // Singleton & paging-related
+    int frameSizeBytes;
+    int totalFrames;
+    std::vector<bool> frameInUse;
+    std::vector<int> frameOwner;
+    std::vector<int>  framePageNum;
+    int pageIns = 0;
+    int pageOuts = 0;
+
+    const std::string        backingStoreFile = "csopesy-backing-store.txt";
+
+
+public:
+    MemoryManager(int maxOverallMem, int memPerFrame);
+
+    // Core functions
     bool allocate(const std::string& processName);
     void free(const std::string& processName);
     void reset();
     bool isAllocated(const std::string& processName) const;
-
     std::vector<MemoryBlock> getBlocksSnapshot() const;
-    int getExternalFragmentation() const;
     const std::vector<MemoryBlock>& getBlocks() const;
+    int getExternalFragmentation() const;
     int getTotalMemory() const;
 
+    // Paging
+    void initialize(int overallMemorySize);
+    int  allocatePage(int processId, int pageNum);
+    void freeFrames(int processId);
+    bool isFrameOccupied(int frameIndex) const;
+
+    // Backing‐store I/O (Phase 1)
+    void savePageToBackingStore(int processId, int pageNum);
+    void loadPageFromBackingStore(int processId, int pageNum);
+
+    int     getFrameSizeBytes() const;
+
+    int getPageIns() const { return pageIns; }
+    int getPageOuts() const { return pageOuts; }
 };
