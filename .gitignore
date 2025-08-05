@@ -1,0 +1,19 @@
+# Compiled binary
+test_program
+MCO1_MAIN
+
+# Process logs
+processesLogs/
+csopesy-backing-store.txt
+csopesy-log.txt
+
+# Build artifacts
+*.o
+*.obj
+*.exe
+
+# Visual Studio files
+x64/
+Debug/
+Release/
+*.vcxproj.user

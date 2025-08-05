@@ -39,7 +39,7 @@ private:
 public:
     InstructionGenerator()
         : rng(std::random_device{}()),
-        instructionTypeDist(0, 5),  // 0=PRINT, 1=DECLARE, 2=ADD, 3=SUBTRACT, 4=SLEEP, 5=FOR
+        instructionTypeDist(0, 7),  // 0=PRINT, 1=DECLARE, 2=ADD, 3=SUBTRACT, 4=SLEEP, 5=FOR, 6=READ, 7=WRITE
         valueDist(0, 1000),         // Random values 0-1000 for uint16
         sleepDist(1, 10),           // Sleep 1-10 cycles
         repeatsDist(1, 5),          // For loops repeat 1-5 times
@@ -68,10 +68,10 @@ public:
             return generateSleepInstruction();
         case 5: // FOR
             return generateForInstruction(processName, nestingLevel + 1);
-        //case 6: // READ
-        //    return generateReadInstruction();
-        //case 7: // WRITE
-        //    return generateWriteInstruction();
+        case 6: // READ
+            return generateReadInstruction();
+        case 7: // WRITE
+            return generateWriteInstruction();
         default:
             return generatePrintInstruction(processName);
         }
