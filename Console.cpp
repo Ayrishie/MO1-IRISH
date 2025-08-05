@@ -279,13 +279,15 @@ void Console::schedulerStart() {
     }
     std::cout << "Process will be generated every " << batchProcessFreq << " ticks\n";
     std::cout << "\033[0m";
-
+    //batchProcessFreq = batchProcessFreq + 100;
     schedulerThread = std::thread([this]() {
         int tick = 0;
 
         while (schedulerRunning) {
             std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
             tick++;
+
+
 
             if (!disableAutoSpawn) {
                 if (tick % batchProcessFreq == 0) {

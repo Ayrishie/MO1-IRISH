@@ -50,9 +50,12 @@ void RRScheduler::scheduleCPU(int coreId) {
 
             process->executeCommand(coreId); //execute the process
 
-            if (process->executed_commands > prevInstructions) { //if instruction was executed then increment quantum cycle usage
+            if (process->executed_commands > prevInstructions) {
                 quantumUsed++;
                 cpuActiveTicks++;
+            }
+            else {
+                cpuIdleTicks++;
             }
             // Simulate work
             std::this_thread::sleep_for(std::chrono::milliseconds(delayPerExecution));
