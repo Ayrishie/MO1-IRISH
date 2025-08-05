@@ -134,7 +134,7 @@ void MemoryManager::initialize(int overallMemorySize) {
         }
         else {
             ofs << "=== EVICTION LOG ===\n";
-            ofs << "     PID   Page\n";
+            ofs << "     PID Page\n";
             ofs << "---------------\n";
         }
         ofs.close(); // Explicitly close the file
