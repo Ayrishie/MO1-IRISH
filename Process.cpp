@@ -82,7 +82,7 @@ Process::~Process() {
 string Process::getFormattedTime() const {
     time_t st = system_clock::to_time_t(start_time);
     struct tm timeinfo;
-    localtime_r(&st, &timeinfo);
+    localtime_s(&timeinfo, &st);
     stringstream ss;
     ss << put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p");
     return ss.str();
@@ -131,7 +131,7 @@ void Process::executeCommand(int coreId) {
     auto now = system_clock::now();
     time_t t = system_clock::to_time_t(now);
     tm timeinfo;
-    localtime_r(&t, &timeinfo);
+    localtime_s(&timeinfo, &t);
 
     lock_guard<mutex> lock(log_mutex);
     ofstream log_file(log_file_path, ios::app);
@@ -166,9 +166,10 @@ void Process::executeCommand(int coreId) {
             current_instruction = (int)instructions.size();
             return;
         }
-
-        log_file << "(" << put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") Core:" << coreId
-            << " Executing: " << instructions[current_instruction]->toString() << "\n";
+        std::ostringstream screenLog;
+        screenLog << "(" << put_time(&timeinfo, "%m/%d/%Y %I:%M:%S %p") << ") Core:" << coreId
+            << " Executing: " << instructions[current_instruction]->toString();
+        addOutput(screenLog.str());
 
         for (const auto& msg : context->getOutputBuffer()) {
             log_file << "    Output: \"" << msg << "\"\n";

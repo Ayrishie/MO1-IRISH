@@ -6,9 +6,6 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
-#include <thread>
-#include <atomic>
-#include <chrono>
 #include "Process.h"
 
 //NEW

@@ -60,28 +60,29 @@ public:
         if (it != variables.end()) {
             return it->second;
         }
-        // implicit declaration via READ only if under cap
+        // Implicit DECLARE via READ only if under cap
         if (symbolVarCount < MAX_SYMBOL_VARS) {
-            ++symbolVarCount;
             variables[name] = 0;
+            ++symbolVarCount;
             return 0;
         }
-        // cap reached → ignore
+        // Cap reached: return 0 without declaring new var
         return 0;
     }
+
 
     void setVariable(const std::string& name, uint16_t value) {
         auto it = variables.find(name);
         if (it != variables.end()) {
-            // overwrite existing
+            // Overwrite existing variable
             it->second = value;
         }
         else if (symbolVarCount < MAX_SYMBOL_VARS) {
-            // new var under cap
+            // New var under cap
             variables[name] = value;
             ++symbolVarCount;
         }
-        // else: cap reached → silently drop
+        // Else: cap reached → silently ignore new declaration
     }
 
     // Sleep management
@@ -123,8 +124,8 @@ public:
             mapPageToFrame(page, frame);
         }
 
-        std::cerr << "[DEBUG] Writing " << value << " to address 0x"
-            << std::hex << address << std::endl;
+        //std::cerr << "[DEBUG] Writing " << value << " to address 0x"
+        //    << std::hex << address << std::endl;
 
 
         // 3) Now “store” the value in your simulated memory (stubbed for now)
@@ -284,6 +285,11 @@ public:
         uint16_t resultValue = (sum > UINT16_MAX) ? UINT16_MAX : static_cast<uint16_t>(sum);
 
         context.setVariable(result, resultValue);
+
+        // NEW: Log to output
+        std::stringstream ss;
+        ss << "[ADD] " << result << " = " << val1 << " + " << val2 << " = " << resultValue;
+        context.addOutput(ss.str());
         return true;
     }
 
@@ -330,6 +336,11 @@ public:
         uint16_t resultValue = (val1 >= val2) ? (val1 - val2) : 0;
 
         context.setVariable(result, resultValue);
+
+        // NEW: Log to output
+        std::stringstream ss;
+        ss << "[SUB] " << result << " = " << val1 << " - " << val2 << " = " << resultValue;
+        context.addOutput(ss.str());
         return true;
     }
 

@@ -134,7 +134,7 @@ void MemoryManager::initialize(int overallMemorySize) {
         }
         else {
             ofs << "=== EVICTION LOG ===\n";
-            ofs << "     PID   Page\n";
+            ofs << "     PID Page\n";
             ofs << "---------------\n";
         }
         ofs.close(); // Explicitly close the file
@@ -147,7 +147,7 @@ int MemoryManager::allocatePage(int processId, int pageNum) {
 
     for (int i = 0; i < totalFrames; ++i) {
         if (!frameInUse[i]) {
-            std::cerr << "[DEBUG] Free frame found: " << i << std::endl;
+           /* std::cerr << "[DEBUG] Free frame found: " << i << std::endl;*/
             frameInUse[i] = true;
             frameOwner[i] = processId;
             framePageNum[i] = pageNum;
@@ -158,23 +158,29 @@ int MemoryManager::allocatePage(int processId, int pageNum) {
     }
 
     // No free frames - eviction required
-    std::cerr << "[DEBUG] No free frames! Eviction required!" << std::endl;
+    //std::cerr << "[DEBUG] No free frames! Eviction required!" << std::endl;
 
-    // LRU Victim
-    int victim = 0;
+
+    // LRU Victim — must NOT be owned by same process
+    int victim = -1;
     uint64_t oldest = std::numeric_limits<uint64_t>::max();
     for (int i = 0; i < totalFrames; ++i) {
-        if (frameLastAccess[i] < oldest) {
+        if (frameOwner[i] != processId && frameLastAccess[i] < oldest) {
             oldest = frameLastAccess[i];
             victim = i;
         }
     }
 
+    // If no valid victim, return -1 to signal failure (can't allocate)
+    if (victim == -1) {
+        return -1;
+    }
+
     int oldOwner = frameOwner[victim];
     int oldPageNum = framePageNum[victim];
 
-    std::cerr << "[DEBUG] Evicting frame " << victim << " owned by process "
-        << oldOwner << ", page " << oldPageNum << std::endl;
+  /*  std::cerr << "[DEBUG] Evicting frame " << victim << " owned by process "
+        << oldOwner << ", page " << oldPageNum << std::endl;*/
 
     savePageToBackingStore(oldOwner, oldPageNum);
     pageOuts++;
@@ -191,9 +197,9 @@ int MemoryManager::allocatePage(int processId, int pageNum) {
 void MemoryManager::freeFrames(int processId) {
     std::lock_guard<std::mutex> guard(memMutex);
     for (int i = 0; i < totalFrames; ++i) {
-        std::cerr << "[DEBUG] frame[" << i << "] inUse=" << frameInUse[i]
-            << " owner=" << frameOwner[i]
-            << " page=" << framePageNum[i] << "\n";
+        //std::cerr << "[DEBUG] frame[" << i << "] inUse=" << frameInUse[i]
+        //    << " owner=" << frameOwner[i]
+        //    << " page=" << framePageNum[i] << "\n";
         if (frameOwner[i] == processId) {
             frameInUse[i] = false;
             frameOwner[i] = -1;
@@ -209,8 +215,8 @@ bool MemoryManager::isFrameOccupied(int frameIndex) const {
 
 void MemoryManager::savePageToBackingStore(int processId, int pageNum) {
     // IMMEDIATE LOG to confirm we got here at all
-    std::cerr << "[BackingStore] SAVE called for pid="
-        << processId << ", page=" << pageNum << "\n";
+    //std::cerr << "[BackingStore] SAVE called for pid="
+    //    << processId << ", page=" << pageNum << "\n";
 
     std::ofstream ofs(backingStoreFile, std::ios::app);
     if (!ofs.is_open()) {

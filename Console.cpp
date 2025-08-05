@@ -22,7 +22,7 @@ std::string getCurrentTime() {
     auto now = std::chrono::system_clock::now();
     std::time_t now_time = std::chrono::system_clock::to_time_t(now);
     std::tm tm;
-    localtime_r(&now_time, &tm);  // Unix-safe version
+    localtime_s(&tm, &now_time);  // Windows-safe version
     std::stringstream ss;
     ss << std::put_time(&tm, "%m/%d/%Y %I:%M:%S %p");
     return ss.str();
@@ -82,7 +82,7 @@ void Console::initialize() {
 
     clear();
 
-    std::ifstream config("Config.txt");
+    std::ifstream config("config.txt");
     if (!config.is_open()) {
         std::cerr << "Error: Could not open config.txt\n";
         return;
@@ -177,7 +177,7 @@ void Console::initialize() {
         std::cout << "Batch Frequency: " << batchProcessFreq << " ticks\n";
         std::cout << "Instructions: " << minInstructions << " to " << maxInstructions << "\n";
         std::cout << "Delay per Exec: " << delayPerExecution << "ms\n";
-        std::cout << "Max overall Mem: " << maxOverallMem << "bytes\n";
+        std::cout << "Max overall Mem: " << maxOverallMem << " bytes\n";
         std::cout << "Min mem per Frame: " << memPerFrame << " bytes\n";
         std::cout << "Min mem per Proc: " << minMemPerProc << " bytes\n"; 
         std::cout << "Max mem per Proc: " << maxMemPerProc << " bytes\n"; 
@@ -221,10 +221,10 @@ bool Console:: memoryCheck(int maxMem, int frameSize, int minProcMem, int maxPro
         return false;
     }
 
-    if (maxProcMem > maxMem) {
-        std::cerr << "\033[31mError: max-mem-per-proc exceeds max-overall-mem\033[0m\n";
-        return false;
-    }
+    //if (maxProcMem > maxMem) {
+    //    std::cerr << "\033[31mError: max-mem-per-proc exceeds max-overall-mem\033[0m\n";
+    //    return false;
+    //}
 
     if (minProcMem % frameSize != 0 || maxProcMem % frameSize != 0) {
         std::cerr << "\033[31mError: mem-per-proc values must be divisible by mem-per-frame\033[0m\n";
@@ -435,15 +435,23 @@ void Console::showProcessScreen(const std::string& procName) {
                  << "\n";
             
         }
-        if (procPtr->isFinished()) {
-
-            if (procPtr->crashedDueToViolation) {
-                std::cout << "\033[31m" << procPtr->violationMessage << "\033[0m\n\n";
+            if (procPtr->isFinished()) {
+                if (procPtr->crashedDueToViolation) {
+                    bool alreadyPrinted = false;
+                    for (auto& line : procPtr->getRecentOutputs()) {
+                        if (line.find(procPtr->violationMessage) != std::string::npos) {
+                            alreadyPrinted = true;
+                            break;
+                        }
+                    }
+                    if (!alreadyPrinted) {
+                        std::cout << "\033[31m" << procPtr->violationMessage << "\033[0m\n\n";
+                    }
+                }
+                else {
+                    std::cout << "Finished!\n\n";
+                }
             }
-            else {
-                std::cout << "Finished!\n\n";
-            }
-        }
 
         // D) Prompt
         while (true) {
@@ -1026,13 +1034,25 @@ void Console::createProcessWithInstructions(const std::string& procName, int pro
             parsedInstructions.push_back(std::make_shared<DeclareInstruction>(var, static_cast<uint16_t>(value)));
         }
         else if (keyword == "add") {
+            std::string argsLine = line.substr(keywordEnd);
+            argsLine.erase(0, argsLine.find_first_not_of(" \t\r\n"));
+
+            std::istringstream args(argsLine);
             std::string target, op1, op2;
-            ss >> target >> op1 >> op2;
+            args >> target >> op1 >> op2;
+
+            std::cout << "   → Parsed ADD: " << target << ", " << op1 << ", " << op2 << "\n";
+
             parsedInstructions.push_back(std::make_shared<AddInstruction>(target, op1, op2));
         }
-        else if (keyword == "subtract") {
+        else if (keyword == "sub") {
+            std::string argsLine = line.substr(keywordEnd);
+            argsLine.erase(0, argsLine.find_first_not_of(" \t\r\n"));
+
+            std::istringstream args(argsLine);
             std::string target, op1, op2;
-            ss >> target >> op1 >> op2;
+            args >> target >> op1 >> op2;
+
             parsedInstructions.push_back(std::make_shared<SubtractInstruction>(target, op1, op2));
         }
         else if (keyword == "write") {
@@ -1112,6 +1132,8 @@ void Console::handlePrintInstruction(const std::string& line, std::vector<std::s
             size_t end_quote = args_content.find('\"', start_quote + 1);
             if (end_quote != std::string::npos) {
                 message_content = args_content.substr(start_quote + 1, end_quote - start_quote - 1);
+                message_content.erase(std::remove(message_content.begin(), message_content.end(), '\\'), message_content.end());
+
 
                 size_t plus_position = args_content.find('+', end_quote);
                 if (plus_position != std::string::npos) {
